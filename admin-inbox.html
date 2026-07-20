@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Dolla Pulls | User Details</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f3f6fb;
+padding:20px;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+}
+
+.header{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+background:#0b1a33;
+padding:15px 20px;
+
+border-radius:8px;
+
+margin-bottom:20px;
+
+color:#fff;
+
+}
+
+.backBtn{
+
+background:#18f2c2;
+
+color:#000;
+
+padding:10px 18px;
+
+border:none;
+
+border-radius:6px;
+
+cursor:pointer;
+
+font-weight:bold;
+
+}
+
+.backBtn:hover{
+
+opacity:.9;
+
+}
+
+.table-box{
+
+background:#fff;
+
+border-radius:8px;
+
+padding:15px;
+
+box-shadow:0 2px 8px rgba(0,0,0,.2);
+
+overflow-x:auto;
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+td{
+
+border:1px solid #888;
+
+padding:12px;
+
+font-size:14px;
+
+}
+
+td:first-child{
+
+width:260px;
+
+background:#ececec;
+
+font-weight:bold;
+
+}
+
+.refBox{
+
+line-height:30px;
+
+}
+
+.loading{
+
+text-align:center;
+
+padding:40px;
+
+font-size:18px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h2>User Details</h2>
+
+<button class="backBtn" onclick="history.back()">
+
+⬅ Back
+
+</button>
+
+</div>
+
+<div class="table-box">
+
+<div id="loading" class="loading">
+
+Loading...
+
+</div>
+
+<table id="userTable" style="display:none;">
+
+<tr>
+
+<td>User Name</td>
+
+<td id="userName"></td>
+
+</tr>
+
+<tr>
+
+<td>Phone Number</td>
+
+<td id="phone"></td>
+
+</tr>
+
+<tr>
+
+<td>Total Balance</td>
+
+<td id="balance"></td>
+
+</tr>
+
+<tr>
+
+<td>Total Deposit</td>
+
+<td id="deposit"></td>
+
+</tr>
+
+<tr>
+
+<td>Total Withdraw</td>
+
+<td id="withdraw"></td>
+
+</tr>
+
+<tr>
+
+<td>Last Deposit Time + Date</td>
+
+<td id="lastDeposit"></td>
+
+</tr>
+
+<tr>
+
+<td>Last Withdraw Time + Date</td>
+
+<td id="lastWithdraw"></td>
+
+</tr>
+
+<tr>
+
+<td>All Referral Number</td>
+
+<td id="referrals" class="refBox"></td>
+
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+
+import {
+
+getFirestore,
+
+doc,
+
+getDoc,
+
+collection,
+
+query,
+
+where,
+
+getDocs
+
+}
+
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+
+authDomain:"dolla-pulls.firebaseapp.com",
+
+projectId:"dolla-pulls",
+
+storageBucket:"dolla-pulls.firebasestorage.app",
+
+messagingSenderId:"952761946013",
+
+appId:"1:952761946013:web:72fe061231ee8951c0e974"
+
+};
+
+const app=initializeApp(firebaseConfig);
+
+const db=getFirestore(app);
+
+// এখান থেকে Part 2 শুরু হবে...
+  const params = new URLSearchParams(location.search);
+
+const uid = params.get("uid");
+
+if(!uid){
+
+alert("User ID Missing");
+
+history.back();
+
+}
+
+loadUser();
+
+async function loadUser(){
+
+const userRef = doc(db,"users",uid);
+
+const userSnap = await getDoc(userRef);
+
+if(!userSnap.exists()){
+
+alert("User Not Found");
+
+history.back();
+
+return;
+
+}
+
+const user = userSnap.data();
+
+document.getElementById("userName").innerText =
+user.name || "N/A";
+
+document.getElementById("phone").innerText =
+user.phone || "N/A";
+
+document.getElementById("balance").innerText =
+"৳ " + (user.balance || 0);
+
+// ======================
+// Approved Deposits
+// ======================
+
+let depositTotal = 0;
+
+let lastDeposit = "-";
+
+const depositQuery = query(
+
+collection(db,"deposits"),
+
+where("uid","==",uid),
+
+where("status","==","approved")
+
+);
+
+const depositSnap = await getDocs(depositQuery);
+
+depositSnap.forEach(d=>{
+
+const x = d.data();
+
+depositTotal += Number(x.amount || 0);
+
+const t = x.approvedAt || x.createdAt;
+
+if(t){
+
+const date = t.toDate();
+
+if(lastDeposit=="-" || date > new Date(lastDeposit)){
+
+lastDeposit = date.toLocaleString();
+
+}
+
+}
+
+});
+
+document.getElementById("deposit").innerText =
+"৳ " + depositTotal;
+
+document.getElementById("lastDeposit").innerText =
+lastDeposit;
+
+// ======================
+// Approved Withdraw
+// ======================
+
+let withdrawTotal = 0;
+
+let lastWithdraw = "-";
+
+const withdrawQuery = query(
+
+collection(db,"withdraws"),
+
+where("uid","==",uid),
+
+where("status","==","approved")
+
+);
+
+const withdrawSnap = await getDocs(withdrawQuery);
+
+withdrawSnap.forEach(d=>{
+
+const x = d.data();
+
+withdrawTotal += Number(x.amount || 0);
+
+const t = x.approvedAt || x.createdAt;
+
+if(t){
+
+const date = t.toDate();
+
+if(lastWithdraw=="-" || date > new Date(lastWithdraw)){
+
+lastWithdraw = date.toLocaleString();
+
+}
+
+}
+
+});
+
+document.getElementById("withdraw").innerText =
+"৳ " + withdrawTotal;
+
+document.getElementById("lastWithdraw").innerText =
+lastWithdraw;
+
+// Part 3 এ Referral Number লোড হবে...
+  // ======================
+// All Referral Numbers
+// ======================
+
+let refHTML = "";
+
+let refCount = 1;
+
+const referralQuery = query(
+    collection(db,"referrals"),
+    where("uid","==",uid)
+);
+
+const referralSnap = await getDocs(referralQuery);
+
+if(referralSnap.empty){
+
+    refHTML = "No Referral";
+
+}else{
+
+    referralSnap.forEach(doc=>{
+
+        const data = doc.data();
+
+        refHTML += `
+            <div>
+                Ref${refCount}: ${data.newUserPhone || "N/A"}
+            </div>
+        `;
+
+        refCount++;
+
+    });
+
+}
+
+document.getElementById("referrals").innerHTML = refHTML;
+
+// ======================
+// Finish Loading
+// ======================
+
+document.getElementById("loading").style.display = "none";
+
+document.getElementById("userTable").style.display = "table";
+
+}
+</script>
+
+</body>
+</html>
