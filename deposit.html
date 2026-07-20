@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dolla Pulls | Credit</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Hind Siliguri',sans-serif;
+    min-height:100vh;
+    background:url("https://raw.githubusercontent.com/theworldvegas/theworldvegas/main/assets/background.jpg") center center/cover no-repeat fixed;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.box{
+    width:100%;
+    max-width:420px;
+    background:rgba(255,255,255,.10);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:22px;
+    padding:20px;
+    box-shadow:0 20px 45px rgba(0,0,0,.45);
+}
+
+.top-banner{
+    width:100%;
+    margin-bottom:20px;
+}
+
+.top-banner img{
+    width:100%;
+    display:block;
+    border-radius:18px;
+    box-shadow:
+        0 0 18px rgba(90,120,255,.25),
+        0 10px 25px rgba(0,0,0,.45);
+}
+
+label{
+    display:block;
+    margin-top:16px;
+    margin-bottom:6px;
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+}
+
+input,
+select{
+    width:100%;
+    padding:13px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.25);
+    outline:none;
+    background:rgba(255,255,255,.15);
+    color:#fff;
+    font-size:15px;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,.7);
+}
+
+select option{
+    color:#000;
+}
+
+.submit-btn{
+    width:100%;
+    margin-top:22px;
+    padding:14px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    font-size:17px;
+    font-weight:bold;
+    color:#fff;
+    background:linear-gradient(135deg,#00c853,#64dd17);
+    transition:.3s;
+}
+
+.submit-btn:hover{
+    transform:translateY(-2px);
+}
+
+.note{
+    margin-top:16px;
+    text-align:center;
+    color:#fff;
+    font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<div class="top-banner">
+    <img src="https://raw.githubusercontent.com/theworldvegas/theworldvegas/main/assets/pic1.gif" alt="Deposit Banner">
+</div>
+
+<form id="depositForm">
+  <label>Payment Method</label>
+  <select id="method" required>
+   <option value="">Select</option>
+   <option value="Bkash">Bkash Bank</option>
+   <option value="Nagad">Nagad Bank</option>
+   <option value="Rocket">Rocket Bank</option>
+   <option value="Ok">Ok Bank</option>  
+ </select>
+
+<label>Enter Dollars </label>
+
+<input
+type="number"
+id="amount"
+min="10"
+placeholder="Minimum 10 Dollars"
+required>
+<label>Transaction ID</label>
+
+<input
+type="text"
+id="trxId"
+placeholder="Transaction ID"
+required>
+
+<label>Phone Number</label>
+
+<input
+type="tel"
+id="userPhone"
+placeholder="Phone Number"
+required>
+
+<button type="submit" class="submit-btn">
+Credit
+</button>
+
+</form>
+
+<div class="note">
+Please Insure Your Information
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+
+    authDomain: "dolla-pulls.firebaseapp.com",
+
+    projectId: "dolla-pulls",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+
+onAuthStateChanged(auth,(user)=>{
+    if(!user){
+        location.href="index.html";
+        return;
+    }
+    currentUser = user;
+});
+
+const methodEl = document.getElementById("method");
+const amountEl = document.getElementById("amount");
+const trxIdEl = document.getElementById("trxId");
+const userPhoneEl = document.getElementById("userPhone");
+const submitBtn = document.querySelector(".submit-btn");
+  document.getElementById("depositForm").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+
+    const method = methodEl.value;
+    const amount = Number(amountEl.value);
+    const trxId = trxIdEl.value.trim();
+    const userPhone = userPhoneEl.value.trim();
+
+    if(!method){
+        alert("Payment Method");
+        return;
+    }
+
+    if(amount < 10){
+        alert("Minimum Credit 10 Dollars");
+        return;
+    }
+
+    if(!trxId){
+        alert("Transaction ID");
+        return;
+    }
+
+    if(userPhone.length < 11){
+        alert("Phone Number");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Processing...";
+
+    try{
+
+        await addDoc(collection(db,"deposits"),{
+
+            uid: currentUser.uid,
+
+            phone: currentUser.phoneNumber || "",
+
+            customerPhone: userPhone,
+
+            type:"deposit",
+
+            method:method,
+
+            amount:amount,
+
+            trxId:trxId,
+
+            status:"pending",
+
+            createdAt:serverTimestamp()
+
+        });
+
+        alert("Credit Request Submitted");
+
+        location.href="dashboard.html";
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Something went wrong.");
+
+        submitBtn.disabled=false;
+
+        submitBtn.innerText="Submit Credit";
+    }
+
+});
+</script>
+
+</body>
+</html>
