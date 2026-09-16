@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>Dolla Pulls | Balance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Hind Siliguri',sans-serif;
+    background:url("https://raw.githubusercontent.com/theworldvegas/theworldvegas/main/assets/background.jpg")
+    center center/cover no-repeat fixed;
+    min-height:100vh;
+    padding:20px;
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.20);
+    z-index:-1;
+}
+
+/* =========================
+   BALANCE BOX
+========================= */
+
+.box{
+    max-width:420px;
+    margin:20px auto;
+    padding:20px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border-radius:22px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.20);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,.35),
+        inset 0 1px rgba(255,255,255,.25);
+}
+
+.left{
+    flex:1;
+}
+
+.small{
+    color:#ddd;
+    font-size:15px;
+    margin-bottom:8px;
+}
+
+.balance{
+    font-size:32px;
+    font-weight:bold;
+    color:#fff;
+}
+
+.right img{
+    width:180px;
+    height:135px;
+    object-fit:contain;
+}
+
+
+/* =========================
+   PROFIT RATE BOX
+========================= */
+
+.rate-box{
+    max-width:420px;
+    margin:18px auto 20px;
+    padding:18px 20px;
+
+    border-radius:22px;
+
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.20);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,.35),
+        inset 0 1px rgba(255,255,255,.25);
+}
+
+.rate-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:10px 0;
+
+    color:#fff;
+    font-size:16px;
+
+    border-bottom:1px solid rgba(255,255,255,.12);
+}
+
+.rate-line:last-child{
+    border-bottom:none;
+}
+
+.rate-percent{
+    color:#00ff88;
+    font-weight:600;
+    margin-left:15px;
+    white-space:nowrap;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<!-- =========================
+     BALANCE BOX
+========================= -->
+
+<div class="box">
+
+    <div class="left">
+
+        <div class="small">
+            Rest Dollars
+        </div>
+
+        <div class="small">
+            💵
+        </div>
+
+        <div class="balance">
+            <span id="balance">0</span>💲
+        </div>
+
+    </div>
+
+    <div class="right">
+
+        <img
+            src="https://raw.githubusercontent.com/dollapulls-alt/Dolla-Pulls/main/assets/balance.gif"
+            alt="Balance GIF"
+        >
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     PROFIT RATE BOX
+========================= -->
+
+<div class="rate-box">
+
+    <div class="rate-line">
+        <span>Up to 50 Dollars</span>
+        <span class="rate-percent">0.015%</span>
+    </div>
+
+    <div class="rate-line">
+        <span>Up to 1000 Dollars</span>
+        <span class="rate-percent">0.021%</span>
+    </div>
+
+    <div class="rate-line">
+        <span>Up to 5000 Dollars</span>
+        <span class="rate-percent">0.03%</span>
+    </div>
+
+    <div class="rate-line">
+        <span>Up to 20000 Dollars</span>
+        <span class="rate-percent">0.039%</span>
+    </div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    doc,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+
+    authDomain: "dolla-pulls.firebaseapp.com",
+
+    projectId: "dolla-pulls",
+
+};
+
+
+/* =========================
+   INITIALIZE FIREBASE
+========================= */
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+/* =========================
+   LOAD BALANCE
+========================= */
+
+onAuthStateChanged(auth, (user) => {
+
+    if (!user) {
+
+        location.href = "index.html";
+
+        return;
+
+    }
+
+
+    onSnapshot(
+        doc(db, "users", user.uid),
+        (snap) => {
+
+            if (snap.exists()) {
+
+                document.getElementById("balance").innerText =
+                    snap.data().balance || 0;
+
+            }
+
+        }
+    );
+
+});
+
+</script>
+
+</body>
+</html>
