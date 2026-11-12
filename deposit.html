@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10251f">
+<title>Company Deposit Assistant</title>
+<style>
+:root{--bg:#0b1512;--panel:#14231e;--panel2:#1b3028;--line:#29463a;--text:#f2f8f4;--muted:#a9beb2;--green:#23c483;--green2:#0f9d68;--danger:#ffb4a9}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#18372b 0,#0b1512 48%);font-family:Arial,"Noto Sans Bengali",sans-serif;color:var(--text);min-height:100vh;padding:22px 14px}
+.wrap{max-width:520px;margin:0 auto}.brand{display:flex;align-items:center;gap:12px;margin:8px 0 18px}.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#2de39a,#08784e);display:grid;place-items:center;font-size:23px;color:#062116;font-weight:900}.brand h1{font-size:18px;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.card{background:rgba(20,35,30,.96);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 18px 50px #0005}.status{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px;margin-bottom:16px;font-size:13px}.online{color:#6ee7b7}.bubble{background:var(--panel2);border:1px solid var(--line);padding:14px;border-radius:16px 16px 16px 5px;line-height:1.65;font-size:14px;margin:12px 0 16px}.label{font-size:13px;color:var(--muted);margin:16px 0 9px}.methods{display:grid;grid-template-columns:1fr 1fr;gap:9px}.method{border:1px solid var(--line);background:#172a22;color:var(--text);padding:13px 10px;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer}.method:last-child{grid-column:1/-1}.method.active{border-color:var(--green);background:#123d2c;box-shadow:inset 0 0 0 1px var(--green)}button:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:2px}.paybox{display:none;background:#10251c;border:1px solid #26734f;border-radius:16px;padding:15px;margin-top:14px}.paybox.show{display:block}.paytitle{font-size:13px;color:#a8d9bd}.number{font-size:25px;letter-spacing:1px;font-weight:800;margin:9px 0 12px;overflow-wrap:anywhere}.btn{border:0;border-radius:12px;padding:12px 15px;font-weight:700;cursor:pointer}.copy{background:#d7ffeb;color:#073b26;width:100%}.primary{background:linear-gradient(135deg,var(--green),var(--green2));color:#062116;width:100%;margin-top:13px}.secondary{background:#233b30;color:var(--text);width:100%;margin-top:8px}.form{display:none;margin-top:17px;border-top:1px solid var(--line);padding-top:15px}.form.show{display:block}.field{margin:11px 0}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.field input{width:100%;background:#0d1b15;border:1px solid var(--line);border-radius:11px;padding:13px;color:var(--text);font-size:15px}.hint{font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px}.message{display:none;padding:12px;border-radius:11px;margin-top:12px;font-size:13px;line-height:1.5}.message.show{display:block}.success{background:#123d2c;color:#b9ffda}.error{background:#46221f;color:#ffd0c9}.foot{text-align:center;color:#789287;font-size:11px;margin:16px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="logo">AI</div><div><h1>Company Deposit Assistant</h1><p>Automated deposit support</p></div></div>
+  <main class="card">
+    <div class="status"><strong>Deposit Support</strong><span class="online">● Online</span></div>
+    <div class="bubble">আসসালামু আলাইকুম! 👋<br>ডিপোজিট করতে নিচের মাধ্যম থেকে <b>একটি</b> নির্বাচন করুন।</div>
+    <div class="label">ডিপোজিটের মাধ্যম নির্বাচন করুন</div>
+    <div class="methods" id="methods">
+      <button class="method" type="button" data-method="বিকাশ">বিকাশ</button>
+      <button class="method" type="button" data-method="নগদ">নগদ</button>
+      <button class="method" type="button" data-method="ওকে বুথ CRM (DBBL)">ওকে বুথ CRM (DBBL)</button>
+    </div>
+    <section class="paybox" id="paybox" aria-live="polite">
+      <div class="paytitle" id="paytitle">নির্বাচিত পেমেন্ট মাধ্যম</div>
+      <div class="number" id="number"></div>
+      <div class="hint" id="instruction"></div>
+      <button class="btn copy" id="copyBtn" type="button">নম্বর কপি করুন</button>
+      <button class="btn primary" id="continueBtn" type="button">টাকা পাঠিয়েছি — তথ্য দিন</button>
+    </section>
+    <form class="form" id="depositForm">
+      <div class="bubble">পেমেন্ট করার পর নিচের তথ্যগুলো দিন। আপনার অনুরোধ যাচাইয়ের জন্য কোম্পানির ইমেইলে পাঠানো হবে।</div>
+      <div class="field"><label for="customerName">আপনার নাম *</label><input id="customerName" name="customerName" required maxlength="80" autocomplete="name" placeholder="নাম লিখুন"></div>
+      <div class="field"><label for="amount">ডিপোজিটের পরিমাণ (৳) *</label><input id="amount" name="amount" type="number" min="1" step="1" required placeholder="যেমন 500"></div>
+      <div class="field"><label for="trxid">Transaction ID (TrxID) *</label><input id="trxid" name="trxid" required maxlength="80" placeholder="TrxID লিখুন"></div>
+      <div class="field"><label for="contact">মোবাইল নম্বর (ঐচ্ছিক)</label><input id="contact" name="contact" inputmode="tel" maxlength="20" placeholder="01XXXXXXXXX"></div>
+      <button class="btn primary" id="submitBtn" type="submit">ডিপোজিট রিকোয়েস্ট পাঠান</button>
+      <div class="hint">সতর্কতা: টাকা পাঠানোর আগে নম্বর ও প্রাপকের তথ্য নিজে যাচাই করুন। TrxID জমা হলেই ডিপোজিট অনুমোদিত হবে না; কোম্পানি পেমেন্ট যাচাই করবে।</div>
+    </form>
+    <div class="message" id="message" role="status"></div>
+  </main>
+  <div class="foot">Deposit Assistant • Payment approval is subject to manual verification</div>
+</div>
+<script>
+/* Apps Script Web App URL এখানে বসান। সেটআপের আগে ফাঁকা রাখুন। */
+const SCRIPT_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+const paymentMethods = {
+  "বিকাশ": {number:"01776103871", instruction:"বিকাশ অ্যাপ থেকে Send Money করুন।"},
+  "নগদ": {number:"01776103871", instruction:"নগদ অ্যাপ থেকে Send Money করুন।"},
+  "ওকে বুথ CRM (DBBL)": {number:"10389562324", instruction:"DBBL / OK Booth CRM-এর নির্ধারিত পদ্ধতিতে পেমেন্ট করুন।"}
+};
+let selectedMethod = "";
+const paybox = document.getElementById("paybox");
+const form = document.getElementById("depositForm");
+const message = document.getElementById("message");
+const numberEl = document.getElementById("number");
+
+document.querySelectorAll(".method").forEach(btn => btn.addEventListener("click", () => {
+  selectedMethod = btn.dataset.method;
+  document.querySelectorAll(".method").forEach(b => b.classList.toggle("active", b === btn));
+  const p = paymentMethods[selectedMethod];
+  document.getElementById("paytitle").textContent = selectedMethod;
+  numberEl.textContent = p.number;
+  document.getElementById("instruction").textContent = p.instruction;
+  paybox.classList.add("show");
+  form.classList.remove("show");
+  message.className = "message";
+}));
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(numberEl.textContent);
+    document.getElementById("copyBtn").textContent = "কপি হয়েছে ✓";
+  } catch {
+    const r = document.createRange(); r.selectNodeContents(numberEl);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.getElementById("copyBtn").textContent = "নম্বরটি সিলেক্ট হয়েছে — কপি করুন";
+  }
+});
+document.getElementById("continueBtn").addEventListener("click", () => {
+  form.classList.add("show");
+  form.scrollIntoView({behavior:"smooth",block:"start"});
+});
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!selectedMethod) return;
+  if (!SCRIPT_URL.startsWith("https://script.google.com/")) {
+    showMessage("ইমেইল চালু করতে আগে Apps Script Web App URL কোডে বসাতে হবে। ফর্মটি এখনো ইমেইল পাঠায়নি।", "error");
+    return;
+  }
+  const data = {
+    customerName: document.getElementById("customerName").value.trim(),
+    amount: document.getElementById("amount").value,
+    trxid: document.getElementById("trxid").value.trim(),
+    contact: document.getElementById("contact").value.trim(),
+    method: selectedMethod,
+    paymentNumber: paymentMethods[selectedMethod].number
+  };
+  const submit = document.getElementById("submitBtn");
+  submit.disabled = true; submit.textContent = "পাঠানো হচ্ছে...";
+  try {
+    await fetch(SCRIPT_URL, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+      body:new URLSearchParams(data).toString()
+    });
+    showMessage("রিকোয়েস্ট পাঠানো হয়েছে। এটি এখনো Pending Verification; পেমেন্ট যাচাই না হওয়া পর্যন্ত অনুমোদিত নয়।", "success");
+    form.reset();
+  } catch(err) {
+    showMessage("রিকোয়েস্ট পাঠানো যায়নি। ইন্টারনেট ও Apps Script URL পরীক্ষা করে আবার চেষ্টা করুন।", "error");
+  } finally {
+    submit.disabled = false; submit.textContent = "ডিপোজিট রিকোয়েস্ট পাঠান";
+  }
+});
+function showMessage(text, type) {
+  message.textContent = text;
+  message.className = "message show " + type;
+}
+</script>
+</body>
+</html>
