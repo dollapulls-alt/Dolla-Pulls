@@ -274,15 +274,60 @@ window.showLogin = ()=>{
 };
 
 /* SIGNUP */
-window.signup = async ()=>{
-  const btn = signupBtn;
-  if(btn.disabled) return;
+window.signup = async () => {
 
-  if(!fullName.value || !signupPhone.value || !signupPass.value){
-    alert("All fields are required");
+  const btn = document.getElementById("signupBtn");
+
+  if (btn.disabled) return;
+
+  const nidName = document.getElementById("nidName").value.trim();
+  const nidNumber = document.getElementById("nidNumber").value.trim();
+  const dateOfBirth = document.getElementById("dateOfBirth").value;
+  const mfsPhone = document.getElementById("mfsPhone").value.trim();
+  const password = document.getElementById("signupPass").value;
+  const confirmPassword = document.getElementById("signupPass2").value;
+  const referCode = document.getElementById("referCode").value.trim();
+
+  // Required field validation
+  if (!nidName || !nidNumber || !dateOfBirth ||
+      !mfsPhone || !password || !confirmPassword) {
+    alert("Please fill all required fields");
     return;
   }
-  if(signupPass.value !== signupPass2.value){
+
+  // English name validation
+  if (!/^[A-Za-z][A-Za-z .'-]*$/.test(nidName)) {
+    alert("Please enter NID name in English");
+    return;
+  }
+
+  // NID validation (Bangladesh)
+  if (!/^(?:\d{10}|\d{13}|\d{17})$/.test(nidNumber)) {
+    alert("Invalid NID number");
+    return;
+  }
+
+  // Phone normalization
+  const phone = normalizePhone(mfsPhone);
+
+  if (!/^01[3-9]\d{8}$/.test(phone)) {
+    alert("Please enter a valid Bangladesh MFS phone number");
+    return;
+  }
+
+  // Date validation
+  if (new Date(dateOfBirth) >= new Date()) {
+    alert("Invalid date of birth");
+    return;
+  }
+
+  // Password validation
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  if (password !== confirmPassword) {
     alert("Password mismatch");
     return;
   }
@@ -290,30 +335,55 @@ window.signup = async ()=>{
   btn.disabled = true;
   btn.innerText = "Processing...";
 
-  try{
-    const phone = normalizePhone(signupPhone.value);
+  try {
+
     const email = phone + "@binoyog.com";
 
-    const cred = await createUserWithEmailAndPassword(auth,email,signupPass.value);
+    const cred = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-    await setDoc(doc(db,"users",cred.user.uid),{
+    await setDoc(doc(db, "users", cred.user.uid), {
+
       uid: cred.user.uid,
-      name: fullName.value,
+
+      // User information
+      name: nidName,
+      nidName: nidName,
+      nidNumber: nidNumber,
+      dateOfBirth: dateOfBirth,
+
+      // MFS information
       phone: phone,
-      referCode: referCode.value || null,
+      mfsPhone: phone,
+
+      // Referral
+      referCode: referCode || null,
+
+      // Account information
       balance: 0,
       role: "user",
       createdAt: serverTimestamp()
+
     });
 
     alert("Signup successful. Please login.");
-    showLogin();
-  }catch(e){
-    alert(e.message);
-  }
 
-  btn.disabled = false;
-  btn.innerText = "CONTINUE";
+    showLogin();
+
+  } catch (e) {
+
+    console.error("Signup error:", e);
+    alert(e.message || "Signup failed");
+
+  } finally {
+
+    btn.disabled = false;
+    btn.innerText = "CONTINUE";
+
+  }
 };
 
 /* LOGIN */
