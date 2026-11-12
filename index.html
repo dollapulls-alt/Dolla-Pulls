@@ -4,427 +4,162 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dolla Pulls | Login</title>
-<!-- আইকনের জন্য FontAwesome যুক্ত করা হয়েছে -->
-<link rel="stylesheet" href="https://cloudflare.com">
 <style>
-@import url('https://googleapis.com');
-
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:'Poppins', Arial, sans-serif;
-
-  background-image:url("https://raw.githubusercontent.com/theworldvegas/theworldvegas/main/assets/index.gif");
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
-  background-attachment:fixed;
-
-  color:#fff;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  position:relative;
-  overflow-x:hidden;
-}
-
-.container{
-  width: 100%;
-  max-width:440px;
-  padding:20px;
-  position: relative;
-  z-index: 10;
-}
-.header{
-  text-align:center;
-  padding-bottom: 25px;
-}
-.header h1{
-  margin:0;
-  font-size:32px;
-  font-weight: 600;
-  color:#00f2fe;
-  text-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
-}
-.header p {
-  margin: 5px 0 0 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* গ্লাস কার্ড স্টাইল */
-.card{
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(0, 242, 254, 0.35);
-  border-radius: 24px;
-  padding: 35px 30px;
-  backdrop-filter: blur(15px);
-  box-shadow: 0 0 40px rgba(0, 242, 254, 0.15), 
-              inset 0 0 15px rgba(255, 255, 255, 0.02);
-}
-.tabs{
-  display:flex;
-  margin-bottom:30px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 30px;
-  padding: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.tab{
-  flex:1;
-  text-align:center;
-  padding:12px;
-  cursor:pointer;
-  border-radius: 25px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-.tab.active{
-  background: rgba(0, 242, 254, 0.2);
-  color:#00f2fe;
-  box-shadow: inset 0 0 10px rgba(0, 242, 254, 0.2);
-}
-
-/* ইনপুট গ্রুপ আইকনসহ */
-.input-wrapper {
-  position: relative;
-  margin-top: 20px;
-}
-.input-wrapper i {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 16px;
-}
-input{
-  width:100%;
-  padding: 15px 50px 15px 20px;
-  border-radius: 30px;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
-  outline:none;
-  background: rgba(255, 255, 255, 0.05);
-  color:#fff;
-  font-size: 15px;
-  transition: all 0.3s ease;
-}
-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-input:focus{
-  border-color: #00f2fe;
-  box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
-}
-
-/* বাটন গ্লাস স্টাইল */
-button{
-  width:100%;
-  padding:15px;
-  margin-top:30px;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-radius:30px;
-  background: transparent;
-  color:#fff;
-  font-size: 16px;
-  font-weight:600;
-  letter-spacing: 1px;
-  cursor:pointer;
-  transition: all 0.3s ease;
-}
-button:hover{
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #00f2fe;
-  box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
-}
-button:disabled{
-  opacity:.4;
-  cursor:not-allowed;
-  box-shadow: none;
-}
-.link{
-  margin-top:20px;
-  text-align:center;
-  color: rgba(255, 255, 255, 0.6);
-  cursor:pointer;
-  font-size:14px;
-  transition: color 0.3s;
-}
-.link:hover {
-  color: #00f2fe;
-  text-decoration: underline;
-}
-.hide{display:none}
+body{margin:0;font-family:'Poppins',Arial,sans-serif;background-image:url("https://raw.githubusercontent.com/theworldvegas/theworldvegas/main/assets/index.gif");background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center;position:relative;overflow-x:hidden}
+.container{width:100%;max-width:440px;padding:20px;position:relative;z-index:10}
+.header{text-align:center;padding-bottom:25px}.header h1{margin:0;font-size:32px;font-weight:600;color:#00f2fe;text-shadow:0 0 15px rgba(0,242,254,.4)}.header p{margin:5px 0 0;font-size:14px;color:rgba(255,255,255,.6)}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(0,242,254,.35);border-radius:24px;padding:35px 30px;backdrop-filter:blur(15px);box-shadow:0 0 40px rgba(0,242,254,.15),inset 0 0 15px rgba(255,255,255,.02)}
+.tabs{display:flex;margin-bottom:30px;background:rgba(255,255,255,.05);border-radius:30px;padding:5px;border:1px solid rgba(255,255,255,.1)}
+.tab{flex:1;text-align:center;padding:12px;cursor:pointer;border-radius:25px;color:rgba(255,255,255,.6);font-weight:500;transition:all .3s ease}.tab.active{background:rgba(0,242,254,.2);color:#00f2fe;box-shadow:inset 0 0 10px rgba(0,242,254,.2)}
+.input-wrapper{position:relative;margin-top:20px}
+input{width:100%;padding:15px 20px;border-radius:30px;border:1.5px solid rgba(255,255,255,.4);outline:none;background:rgba(255,255,255,.05);color:#fff;font-size:15px;transition:all .3s ease}
+input::placeholder{color:rgba(255,255,255,.5)}input:focus{border-color:#00f2fe;box-shadow:0 0 12px rgba(0,242,254,.3)}input[type=date]{color-scheme:dark}
+button{width:100%;padding:15px;margin-top:30px;border:1.5px solid rgba(255,255,255,.4);border-radius:30px;background:transparent;color:#fff;font-size:16px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .3s ease}
+button:hover{background:rgba(255,255,255,.08);border-color:#00f2fe;box-shadow:0 0 15px rgba(0,242,254,.4)}button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.link{margin-top:20px;text-align:center;color:rgba(255,255,255,.6);cursor:pointer;font-size:14px}.link:hover{color:#00f2fe;text-decoration:underline}.hide{display:none}
+.note{font-size:12px;line-height:1.6;color:rgba(255,255,255,.62);margin-top:14px;text-align:center}
 </style>
 </head>
 <body>
-
 <div class="container">
-  <div class="header">
-    <h1>Dolla Pulls</h1>
-    <p>Powered By finance.yahoo.com</p>
-  </div>
-
+  <div class="header"><h1>Dolla Pulls</h1><p>Powered By finance.yahoo.com</p></div>
   <div class="card">
     <div class="tabs">
       <div class="tab active" id="loginTab" onclick="showLogin()">Log in</div>
       <div class="tab" id="signupTab" onclick="showSignup()">Sign up</div>
     </div>
-
-    <!-- LOGIN -->
     <div id="loginBox">
-      <div class="input-wrapper">
-        <input id="loginPhone" placeholder="Phone number">
-        <i class="fa-regular fa-user"></i>
-      </div>
-      <div class="input-wrapper">
-        <input id="loginPass" type="password" placeholder="Password">
-        <i class="fa-regular fa-eye-slash"></i>
-      </div>
+      <div class="input-wrapper"><input id="loginPhone" type="tel" placeholder="Phone number" inputmode="tel" autocomplete="tel"></div>
+      <div class="input-wrapper"><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"></div>
       <button id="loginBtn" onclick="login()">LOG IN</button>
       <div class="link" onclick="forgotPassword()">Forgot password?</div>
     </div>
- 
-<!-- SIGNUP -->
-<div id="signupBox" class="hide">
-
-  <div class="input-wrapper">
-    <input id="nidName" type="text" placeholder="NID NAME (ENG)" autocomplete="name">
-  </div>
-
-  <div class="input-wrapper">
-    <input id="nidNumber" type="text" placeholder="NID NUMBER" inputmode="numeric">
-  </div>
-
-  <div class="input-wrapper">
-    <input id="dateOfBirth" type="date" placeholder="DATE OF BIRTH">
-  </div>
-
-  <div class="input-wrapper">
-    <input id="mfsPhone" type="tel" placeholder="Phone number (MFS)" inputmode="tel">
-  </div>
-
-  <div class="input-wrapper">
-    <input id="signupPass" type="password" placeholder="PASSWORD" autocomplete="new-password">
-  </div>
-
-  <div class="input-wrapper">
-    <input id="signupPass2" type="password" placeholder="RE-ENTER PASSWORD" autocomplete="new-password">
-  </div>
-
-  <div class="input-wrapper">
-    <input id="referCode" type="text" placeholder="REFERRED CODE (OPTIONAL)">
-  </div>
-
-  <button id="signupBtn" onclick="signup()">CONTINUE</button>
-
-</div>
+    <div id="signupBox" class="hide">
+      <div class="input-wrapper"><input id="nidName" type="text" placeholder="NID NAME (ENG)" autocomplete="name"></div>
+      <div class="input-wrapper"><input id="nidNumber" type="text" placeholder="NID NUMBER" inputmode="numeric" autocomplete="off"></div>
+      <div class="input-wrapper"><input id="dateOfBirth" type="date" aria-label="Date of birth"></div>
+      <div class="input-wrapper"><input id="mfsPhone" type="tel" placeholder="Phone number (MFS)" inputmode="tel" autocomplete="tel"></div>
+      <div class="input-wrapper"><input id="signupPass" type="password" placeholder="PASSWORD" autocomplete="new-password"></div>
+      <div class="input-wrapper"><input id="signupPass2" type="password" placeholder="RE-ENTER PASSWORD" autocomplete="new-password"></div>
+      <div class="input-wrapper"><input id="referCode" type="text" placeholder="REFERRED CODE (OPTIONAL)"></div>
+      <button id="signupBtn" onclick="signup()">CONTINUE</button>
+      <div class="note">একটি NID এবং একটি ফোন নম্বর দিয়ে একবারই অ্যাকাউন্ট খোলা যাবে।</div>
+    </div>
   </div>
 </div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  collection,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-/* PHONE NORMALIZER */
-function normalizePhone(phone){
-  phone = phone.trim();
-  if(phone.startsWith("+88")) phone = phone.slice(3);
-  if(phone.startsWith("88")) phone = phone.slice(2);
+function normalizePhone(value) {
+  let phone = String(value || "").trim().replace(/[\s-]/g, "");
+  if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
+  else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
+  else if (phone.startsWith("+88")) phone = phone.slice(3);
+  else if (phone.startsWith("88")) phone = phone.slice(2);
   return phone;
 }
-
 const firebaseConfig = {
-    apiKey: "AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
-    authDomain: "dolla-pulls.firebaseapp.com",
-    projectId: "dolla-pulls",
+  apiKey: "AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+  authDomain: "dolla-pulls.firebaseapp.com",
+  projectId: "dolla-pulls"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const $ = id => document.getElementById(id);
 
-/* UI */
-window.showSignup = ()=>{
-  loginBox.classList.add("hide");
-  signupBox.classList.remove("hide");
-  loginTab.classList.remove("active");
-  signupTab.classList.add("active");
+window.showSignup = () => {
+  $("loginBox").classList.add("hide"); $("signupBox").classList.remove("hide");
+  $("loginTab").classList.remove("active"); $("signupTab").classList.add("active");
+};
+window.showLogin = () => {
+  $("signupBox").classList.add("hide"); $("loginBox").classList.remove("hide");
+  $("signupTab").classList.remove("active"); $("loginTab").classList.add("active");
 };
 
-window.showLogin = ()=>{
-  signupBox.classList.add("hide");
-  loginBox.classList.remove("hide");
-  signupTab.classList.remove("active");
-  loginTab.classList.add("active");
-};
-
-/* SIGNUP */
 window.signup = async () => {
-
-  const btn = document.getElementById("signupBtn");
-
+  const btn = $("signupBtn");
   if (btn.disabled) return;
+  const nidName = $("nidName").value.trim().replace(/\s+/g, " ");
+  const nidNumber = $("nidNumber").value.trim();
+  const dateOfBirth = $("dateOfBirth").value;
+  const phone = normalizePhone($("mfsPhone").value);
+  const password = $("signupPass").value;
+  const confirmPassword = $("signupPass2").value;
+  const referCode = $("referCode").value.trim();
 
-  const nidName = document.getElementById("nidName").value.trim();
-  const nidNumber = document.getElementById("nidNumber").value.trim();
-  const dateOfBirth = document.getElementById("dateOfBirth").value;
-  const mfsPhone = document.getElementById("mfsPhone").value.trim();
-  const password = document.getElementById("signupPass").value;
-  const confirmPassword = document.getElementById("signupPass2").value;
-  const referCode = document.getElementById("referCode").value.trim();
+  if (!nidName || !nidNumber || !dateOfBirth || !phone || !password || !confirmPassword) return alert("Please fill all required fields.");
+  if (!/^[A-Za-z][A-Za-z .'-]*$/.test(nidName)) return alert("Please enter NID name in English.");
+  if (!/^(?:\d{10}|\d{13}|\d{17})$/.test(nidNumber)) return alert("Invalid NID number. Enter 10, 13 or 17 digits.");
+  if (!/^01[3-9]\d{8}$/.test(phone)) return alert("Please enter a valid Bangladesh mobile/MFS number.");
+  const dob = new Date(dateOfBirth + "T00:00:00");
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (Number.isNaN(dob.getTime()) || dob >= today) return alert("Invalid date of birth.");
+  if (password.length < 6) return alert("Password must be at least 6 characters.");
+  if (password !== confirmPassword) return alert("Password mismatch.");
 
-  // Required field validation
-  if (!nidName || !nidNumber || !dateOfBirth ||
-      !mfsPhone || !password || !confirmPassword) {
-    alert("Please fill all required fields");
-    return;
-  }
-
-  // English name validation
-  if (!/^[A-Za-z][A-Za-z .'-]*$/.test(nidName)) {
-    alert("Please enter NID name in English");
-    return;
-  }
-
-  // NID validation (Bangladesh)
-  if (!/^(?:\d{10}|\d{13}|\d{17})$/.test(nidNumber)) {
-    alert("Invalid NID number");
-    return;
-  }
-
-  // Phone normalization
-  const phone = normalizePhone(mfsPhone);
-
-  if (!/^01[3-9]\d{8}$/.test(phone)) {
-    alert("Please enter a valid Bangladesh MFS phone number");
-    return;
-  }
-
-  // Date validation
-  if (new Date(dateOfBirth) >= new Date()) {
-    alert("Invalid date of birth");
-    return;
-  }
-
-  // Password validation
-  if (password.length < 6) {
-    alert("Password must be at least 6 characters");
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    alert("Password mismatch");
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerText = "Processing...";
-
+  btn.disabled = true; btn.innerText = "Processing...";
+  let createdUser = null;
   try {
+    const credential = await createUserWithEmailAndPassword(auth, phone + "@binoyog.com", password);
+    createdUser = credential.user;
+    const uid = createdUser.uid;
+    const batch = writeBatch(db);
 
-    const email = phone + "@binoyog.com";
-
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
-    await setDoc(doc(db, "users", cred.user.uid), {
-
-      uid: cred.user.uid,
-
-      // User information
-      name: nidName,
-      nidName: nidName,
-      nidNumber: nidNumber,
-      dateOfBirth: dateOfBirth,
-
-      // MFS information
-      phone: phone,
-      mfsPhone: phone,
-
-      // Referral
-      referCode: referCode || null,
-
-      // Account information
-      balance: 0,
-      role: "user",
-      createdAt: serverTimestamp()
-
+    batch.set(doc(db, "users", uid), {
+      uid, name: nidName, nidName, nidNumber, dateOfBirth,
+      phone, mfsPhone: phone, referCode: referCode || null,
+      balance: 0, role: "user", createdAt: serverTimestamp()
     });
-
+    batch.set(doc(db, "nid_registry", nidNumber), {
+      uid, nidNumber, createdAt: serverTimestamp()
+    });
+    batch.set(doc(db, "phone_registry", phone), {
+      uid, phone, createdAt: serverTimestamp()
+    });
+    await batch.commit();
+    await signOut(auth);
     alert("Signup successful. Please login.");
-
     showLogin();
+    $("loginPhone").value = phone;
+    $("loginPass").value = "";
+  } catch (error) {
+    console.error("Signup error:", error);
+    let rollbackFailed = false;
+    if (createdUser) {
+      try { await deleteUser(createdUser); }
+      catch (rollbackError) { rollbackFailed = true; console.error("Auth rollback error:", rollbackError); }
+    }
+    if (error.code === "auth/email-already-in-use") {
+      alert("এই ফোন নম্বর দিয়ে আগে থেকেই অ্যাকাউন্ট আছে। Login করুন।");
+    } else if (error.code === "permission-denied" || error.code === "firestore/permission-denied") {
+      alert("এই NID বা ফোন নম্বর আগে নিবন্ধিত, অথবা Firestore Rules-এ অনুমতি নেই। Rules প্রকাশ হয়েছে কি না যাচাই করুন।" + (rollbackFailed ? " অসম্পূর্ণ Authentication অ্যাকাউন্টটি ম্যানুয়ালি মুছতে হতে পারে।" : ""));
+    } else {
+      alert((error.message || "Signup failed.") + (rollbackFailed ? "\nঅসম্পূর্ণ Authentication অ্যাকাউন্টটি ম্যানুয়ালি মুছতে হবে।" : ""));
+    }
+  } finally { btn.disabled = false; btn.innerText = "CONTINUE"; }
+};
 
-  } catch (e) {
-
-    console.error("Signup error:", e);
-    alert(e.message || "Signup failed");
-
-  } finally {
-
-    btn.disabled = false;
-    btn.innerText = "CONTINUE";
-
+window.login = async () => {
+  const btn = $("loginBtn"); if (btn.disabled) return;
+  const phone = normalizePhone($("loginPhone").value);
+  const password = $("loginPass").value;
+  if (!/^01[3-9]\d{8}$/.test(phone) || !password) return alert("সঠিক ফোন নম্বর ও পাসওয়ার্ড দিন।");
+  btn.disabled = true; btn.innerText = "Processing...";
+  try {
+    await signInWithEmailAndPassword(auth, phone + "@binoyog.com", password);
+    location.href = "dashboard.html";
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Wrong phone number or password.");
+    btn.disabled = false; btn.innerText = "LOG IN";
   }
 };
-
-/* LOGIN */
-window.login = async ()=>{
-  const btn = loginBtn;
-  if(btn.disabled) return;
-
-  btn.disabled = true;
-  btn.innerText = "Processing...";
-
-  try{
-    const phone = normalizePhone(loginPhone.value);
-    await signInWithEmailAndPassword(
-      auth,
-      phone + "@binoyog.com",
-      loginPass.value
-    );
-    location.href="dashboard.html";
-  }catch(e){
-    alert("Wrong phone or password");
-    btn.disabled = false;
-    btn.innerText = "LOG IN";
-  }
-};
-
-/* FORGOT PASSWORD */
-window.forgotPassword = async ()=>{
-  const phone = prompt("Enter your phone number");
-  if(!phone) return;
-
-  const newPass = Math.random().toString(36).slice(-8);
-
-  await addDoc(collection(db,"passwordResets"),{
-    phone: normalizePhone(phone),
-    newPassword: newPass,
-    status: "approved",
-    createdAt: serverTimestamp()
-  });
-
-  alert("New password: " + newPass);
-};
+window.forgotPassword = () => alert("Password reset-এর জন্য অ্যাডমিন/সাপোর্টের সঙ্গে যোগাযোগ করুন। নিরাপত্তার কারণে এই পেজে নতুন পাসওয়ার্ড তৈরি বা সংরক্ষণ করা হয় না।");
 </script>
 </body>
 </html>
