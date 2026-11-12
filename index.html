@@ -186,31 +186,41 @@ button:disabled{
       <button id="loginBtn" onclick="login()">LOG IN</button>
       <div class="link" onclick="forgotPassword()">Forgot password?</div>
     </div>
+ 
+<!-- SIGNUP -->
+<div id="signupBox" class="hide">
 
-    <!-- SIGNUP -->
-    <div id="signupBox" class="hide">
-      <div class="input-wrapper">
-        <input id="fullName" placeholder="Full name">
-        <i class="fa-regular fa-id-card"></i>
-      </div>
-      <div class="input-wrapper">
-        <input id="signupPhone" placeholder="Phone number">
-        <i class="fa-regular fa-user"></i>
-      </div>
-      <div class="input-wrapper">
-        <input id="signupPass" type="password" placeholder="Password">
-        <i class="fa-regular fa-eye-slash"></i>
-      </div>
-      <div class="input-wrapper">
-        <input id="signupPass2" type="password" placeholder="Confirm password">
-        <i class="fa-regular fa-eye-slash"></i>
-      </div>
-      <div class="input-wrapper">
-        <input id="referCode" placeholder="Referred Phone Number">
-        <i class="fa-solid fa-gift"></i>
-      </div>
-      <button id="signupBtn" onclick="signup()">CONTINUE</button>
-    </div>
+  <div class="input-wrapper">
+    <input id="nidName" type="text" placeholder="NID NAME (ENG)" autocomplete="name">
+  </div>
+
+  <div class="input-wrapper">
+    <input id="nidNumber" type="text" placeholder="NID NUMBER" inputmode="numeric">
+  </div>
+
+  <div class="input-wrapper">
+    <input id="dateOfBirth" type="date" placeholder="DATE OF BIRTH">
+  </div>
+
+  <div class="input-wrapper">
+    <input id="mfsPhone" type="tel" placeholder="Phone number (MFS)" inputmode="tel">
+  </div>
+
+  <div class="input-wrapper">
+    <input id="signupPass" type="password" placeholder="PASSWORD" autocomplete="new-password">
+  </div>
+
+  <div class="input-wrapper">
+    <input id="signupPass2" type="password" placeholder="RE-ENTER PASSWORD" autocomplete="new-password">
+  </div>
+
+  <div class="input-wrapper">
+    <input id="referCode" type="text" placeholder="REFERRED CODE (OPTIONAL)">
+  </div>
+
+  <button id="signupBtn" onclick="signup()">CONTINUE</button>
+
+</div>
   </div>
 </div>
 
