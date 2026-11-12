@@ -45,7 +45,7 @@ button:hover{background:rgba(255,255,255,.08);border-color:#00f2fe;box-shadow:0 
       <div class="input-wrapper"><input id="signupPass2" type="password" placeholder="RE-ENTER PASSWORD" autocomplete="new-password"></div>
       <div class="input-wrapper"><input id="referCode" type="text" placeholder="REFERRED CODE (OPTIONAL)"></div>
       <button id="signupBtn" onclick="signup()">CONTINUE</button>
-      <div class="note">একটি NID এবং একটি ফোন নম্বর দিয়ে একবারই অ্যাকাউন্ট খোলা যাবে।</div>
+      <div class="note">An NID and a phone number can be used only once.</div>
     </div>
   </div>
 </div>
@@ -135,11 +135,11 @@ window.signup = async () => {
       catch (rollbackError) { rollbackFailed = true; console.error("Auth rollback error:", rollbackError); }
     }
     if (error.code === "auth/email-already-in-use") {
-      alert("এই ফোন নম্বর দিয়ে আগে থেকেই অ্যাকাউন্ট আছে। Login করুন।");
+      alert("An account already exists with this number. Please Login");
     } else if (error.code === "permission-denied" || error.code === "firestore/permission-denied") {
-      alert("এই NID বা ফোন নম্বর আগে নিবন্ধিত, অথবা Firestore Rules-এ অনুমতি নেই। Rules প্রকাশ হয়েছে কি না যাচাই করুন।" + (rollbackFailed ? " অসম্পূর্ণ Authentication অ্যাকাউন্টটি ম্যানুয়ালি মুছতে হতে পারে।" : ""));
+      alert("please submit correct information" + (rollbackFailed ? "mail for help।" : ""));
     } else {
-      alert((error.message || "Signup failed.") + (rollbackFailed ? "\nঅসম্পূর্ণ Authentication অ্যাকাউন্টটি ম্যানুয়ালি মুছতে হবে।" : ""));
+      alert((error.message || "Signup failed.") + (rollbackFailed ? "\nplease delete Authentication account manually" : ""));
     }
   } finally { btn.disabled = false; btn.innerText = "CONTINUE"; }
 };
@@ -148,7 +148,7 @@ window.login = async () => {
   const btn = $("loginBtn"); if (btn.disabled) return;
   const phone = normalizePhone($("loginPhone").value);
   const password = $("loginPass").value;
-  if (!/^01[3-9]\d{8}$/.test(phone) || !password) return alert("সঠিক ফোন নম্বর ও পাসওয়ার্ড দিন।");
+  if (!/^01[3-9]\d{8}$/.test(phone) || !password) return alert("Please enter correct information");
   btn.disabled = true; btn.innerText = "Processing...";
   try {
     await signInWithEmailAndPassword(auth, phone + "@binoyog.com", password);
@@ -159,7 +159,7 @@ window.login = async () => {
     btn.disabled = false; btn.innerText = "LOG IN";
   }
 };
-window.forgotPassword = () => alert("Password reset-এর জন্য অ্যাডমিন/সাপোর্টের সঙ্গে যোগাযোগ করুন। নিরাপত্তার কারণে এই পেজে নতুন পাসওয়ার্ড তৈরি বা সংরক্ষণ করা হয় না।");
+window.forgotPassword = () => alert("please mail for reset passwort");
 </script>
 </body>
 </html>
