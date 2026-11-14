@@ -151,7 +151,7 @@ window.login = async () => {
   if (!/^01[3-9]\d{8}$/.test(phone) || !password) return alert("Please enter correct information");
   btn.disabled = true; btn.innerText = "Processing...";
   try {
-    await signInWithEmailAndPassword(auth, phone + "@binoyog.com", password);
+    await signInWithEmailAndPassword(auth, phone + "@dollapulls.com", password);
     location.href = "dashboard.html";
   } catch (error) {
     console.error("Login error:", error);
