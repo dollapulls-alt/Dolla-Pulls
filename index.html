@@ -105,7 +105,7 @@ window.signup = async () => {
   btn.disabled = true; btn.innerText = "Processing...";
   let createdUser = null;
   try {
-    const credential = await createUserWithEmailAndPassword(auth, phone + "@binoyog.com", password);
+    const credential = await createUserWithEmailAndPassword(auth, phone + "@dollapulls.com", password);
     createdUser = credential.user;
     const uid = createdUser.uid;
     const batch = writeBatch(db);
