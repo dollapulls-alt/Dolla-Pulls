@@ -1,0 +1,825 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dolla Pulls | Admin Customer Support</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#f3f1f8;
+  color:#24113b;
+  font-family:Arial,sans-serif;
+}
+
+header{
+  background:#24113b;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+header a{
+  color:white;
+  text-decoration:none;
+  font-size:14px;
+}
+
+header strong{
+  font-size:16px;
+}
+
+#status{
+  font-size:12px;
+  color:#d7c7ed;
+}
+
+.container{
+  max-width:1100px;
+  margin:18px auto;
+  padding:12px;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:14px;
+  min-height:75vh;
+}
+
+.panel{
+  background:white;
+  border:1px solid #e1d8ed;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 5px 18px #0000000d;
+}
+
+.panel-title{
+  background:#f8f5fc;
+  padding:15px;
+  border-bottom:1px solid #e8e0ef;
+  font-weight:bold;
+}
+
+#chatList{
+  height:68vh;
+  overflow-y:auto;
+}
+
+.chat-item{
+  display:block;
+  width:100%;
+  text-align:left;
+  padding:14px;
+  border:0;
+  border-bottom:1px solid #eee8f4;
+  border-radius:0;
+  background:white;
+  color:#24113b;
+  cursor:pointer;
+  min-height:auto;
+}
+
+.chat-item.active{
+  background:#eee5fb;
+  border-left:4px solid #7441c4;
+}
+
+.chat-item:hover{
+  background:#f5f0fb;
+}
+
+.chat-name{
+  font-weight:bold;
+  font-size:14px;
+  margin-bottom:5px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.chat-preview{
+  font-size:12px;
+  color:#777;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.chat-phone{
+  font-size:11px;
+  color:#8a7c98;
+  margin-top:5px;
+}
+
+.unread{
+  background:#7a42cb;
+  color:white;
+  border-radius:20px;
+  padding:3px 7px;
+  font-size:10px;
+  flex-shrink:0;
+}
+
+#messages{
+  height:58vh;
+  min-height:300px;
+  overflow-y:auto;
+  padding:15px;
+  background:#faf8fd;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+
+.msg{
+  max-width:85%;
+  width:fit-content;
+  padding:11px 14px;
+  border-radius:13px;
+  font-size:14px;
+  line-height:1.6;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.customer{
+  background:#e5d8fa;
+  color:#25113c;
+  margin-left:auto;
+  border-bottom-right-radius:4px;
+}
+
+.bot{
+  background:#e8e5ed;
+  color:#292333;
+  margin-right:auto;
+  border-bottom-left-radius:4px;
+}
+
+.msg-label{
+  display:block;
+  font-size:10px;
+  opacity:.65;
+  margin-bottom:4px;
+}
+
+.msg-time{
+  display:block;
+  font-size:10px;
+  opacity:.6;
+  margin-top:5px;
+  text-align:right;
+}
+
+#emptyState{
+  padding:35px 15px;
+  text-align:center;
+  color:#8a7c98;
+  font-size:14px;
+}
+
+#selectedInfo{
+  padding:12px 15px;
+  border-bottom:1px solid #eee8f4;
+  font-size:13px;
+  color:#756782;
+  background:white;
+}
+
+#errorBox{
+  display:none;
+  padding:12px;
+  margin-bottom:12px;
+  background:#ffe5e8;
+  color:#9d1e36;
+  border-radius:9px;
+  font-size:13px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+
+button:disabled{
+  opacity:.5;
+}
+
+@media(max-width:700px){
+  .container{
+    margin:8px auto;
+    padding:8px;
+  }
+
+  .layout{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  #chatList{
+    height:210px;
+  }
+
+  #messages{
+    height:48vh;
+    min-height:280px;
+  }
+
+  header{
+    padding:13px 10px;
+  }
+
+  header strong{
+    font-size:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <a href="admin-dashboard.html">← Dashboard</a>
+  <strong>Admin Support</strong>
+  <span id="status">Connecting...</span>
+</header>
+
+<div class="container">
+
+  <div id="errorBox" role="alert"></div>
+
+  <div class="layout">
+
+    <!-- CUSTOMER LIST -->
+    <section class="panel">
+
+      <div class="panel-title">
+        Customer Chats
+        <span id="chatCount"> (0)</span>
+      </div>
+
+      <div id="chatList">
+        <div id="emptyState">Loading chats...</div>
+      </div>
+
+    </section>
+
+    <!-- CHAT DETAILS -->
+    <section class="panel">
+
+      <div class="panel-title" id="chatTitle">
+        Customer Conversation
+      </div>
+
+      <div id="selectedInfo">
+        বাম পাশ থেকে একজন Customer নির্বাচন করুন।
+      </div>
+
+      <div id="messages">
+        <div id="emptyState">
+          কোনো Chat নির্বাচন করা হয়নি।
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  onSnapshot,
+  updateDoc
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+/* FIREBASE CONFIG */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+  authDomain: "dolla-pulls.firebaseapp.com",
+  projectId: "dolla-pulls",
+  storageBucket: "dolla-pulls.firebasestorage.app",
+  messagingSenderId: "952761946013",
+  appId: "1:952761946013:web:72fe061231ee8951c0e974"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+
+/* ELEMENTS */
+
+const statusEl = document.getElementById("status");
+const errorBox = document.getElementById("errorBox");
+
+const chatListEl = document.getElementById("chatList");
+const chatCountEl = document.getElementById("chatCount");
+
+const messagesEl = document.getElementById("messages");
+
+const chatTitleEl = document.getElementById("chatTitle");
+const selectedInfoEl = document.getElementById("selectedInfo");
+
+
+/* VARIABLES */
+
+let activeChatId = null;
+let chatsCache = [];
+
+let stopChats = null;
+let stopMessages = null;
+
+
+/* ERROR */
+
+function showError(message){
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+function clearError(){
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+}
+
+function friendlyError(error){
+
+  console.error(error);
+
+  if(error?.code === "permission-denied"){
+    return "Permission Denied: Admin role অথবা Firestore Rules পরীক্ষা করুন।";
+  }
+
+  if(error?.code === "unavailable"){
+    return "ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না।";
+  }
+
+  return error?.message || "অজানা সমস্যা হয়েছে।";
+}
+
+
+/* DATE */
+
+function getTime(data){
+
+  if(data.createdAt?.toDate){
+    return data.createdAt.toDate();
+  }
+
+  if(data.createdAtMs){
+    return new Date(data.createdAtMs);
+  }
+
+  return null;
+}
+
+function formatTime(date){
+
+  if(!date) return "";
+
+  return date.toLocaleString("bn-BD",{
+    day:"numeric",
+    month:"short",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+
+}
+
+
+/* CHAT LIST */
+
+function renderChatList(){
+
+  chatListEl.innerHTML = "";
+
+  chatCountEl.textContent = " (" + chatsCache.length + ")";
+
+  if(chatsCache.length === 0){
+
+    const empty = document.createElement("div");
+    empty.id = "emptyState";
+    empty.textContent = "এখনো কোনো Customer Chat নেই।";
+
+    chatListEl.appendChild(empty);
+
+    return;
+  }
+
+
+  const sortedChats = [...chatsCache].sort((a,b)=>{
+
+    const A = a.data;
+    const B = b.data;
+
+    const at = A.updatedAt?.seconds || 0;
+    const bt = B.updatedAt?.seconds || 0;
+
+    return bt - at;
+
+  });
+
+
+  sortedChats.forEach(item=>{
+
+    const chatId = item.id;
+    const data = item.data;
+
+    const button = document.createElement("button");
+
+    button.className = "chat-item";
+
+    if(chatId === activeChatId){
+      button.classList.add("active");
+    }
+
+
+    const nameRow = document.createElement("div");
+    nameRow.className = "chat-name";
+
+    const name = document.createElement("span");
+    name.textContent = data.name || "Unknown Customer";
+
+    nameRow.appendChild(name);
+
+
+    if(data.unreadByAdmin === true){
+
+      const badge = document.createElement("span");
+
+      badge.className = "unread";
+      badge.textContent = "NEW";
+
+      nameRow.appendChild(badge);
+
+    }
+
+
+    const preview = document.createElement("div");
+
+    preview.className = "chat-preview";
+
+    preview.textContent = data.lastMessage || "No messages yet";
+
+
+    const phone = document.createElement("div");
+
+    phone.className = "chat-phone";
+
+    phone.textContent = data.phone || "Phone unavailable";
+
+
+    button.appendChild(nameRow);
+    button.appendChild(preview);
+    button.appendChild(phone);
+
+
+    button.addEventListener("click",()=>{
+
+      selectChat(chatId);
+
+    });
+
+
+    chatListEl.appendChild(button);
+
+  });
+
+}
+
+
+/* SELECT CUSTOMER */
+
+async function selectChat(chatId){
+
+  activeChatId = chatId;
+
+  const item = chatsCache.find(chat=>chat.id === chatId);
+
+  if(!item) return;
+
+  const data = item.data;
+
+  renderChatList();
+
+  chatTitleEl.textContent = data.name || "Customer Conversation";
+
+  selectedInfoEl.textContent =
+    "Phone: " + (data.phone || "Not available") +
+    " | UID: " + chatId;
+
+  messagesEl.innerHTML = "";
+
+  const loading = document.createElement("div");
+
+  loading.id = "emptyState";
+  loading.textContent = "Messages loading...";
+
+  messagesEl.appendChild(loading);
+
+
+  /* STOP PREVIOUS LISTENER */
+
+  if(stopMessages){
+    stopMessages();
+    stopMessages = null;
+  }
+
+
+  /* MARK AS READ */
+
+  if(data.unreadByAdmin === true){
+
+    try{
+
+      await updateDoc(
+        doc(db,"chats",chatId),
+        {
+          unreadByAdmin:false
+        }
+      );
+
+    }catch(error){
+
+      showError(friendlyError(error));
+
+    }
+
+  }
+
+
+  /* LISTEN TO SELECTED CUSTOMER MESSAGES */
+
+  const messagesRef = collection(
+    db,
+    "chats",
+    chatId,
+    "messages"
+  );
+
+
+  stopMessages = onSnapshot(
+
+    messagesRef,
+
+    snapshot=>{
+
+      if(activeChatId !== chatId) return;
+
+      messagesEl.innerHTML = "";
+
+
+      if(snapshot.empty){
+
+        const empty = document.createElement("div");
+
+        empty.id = "emptyState";
+        empty.textContent = "এই Customer এখনো কোনো Message পাঠায়নি।";
+
+        messagesEl.appendChild(empty);
+
+        return;
+
+      }
+
+
+      const docs = snapshot.docs.slice().sort((a,b)=>{
+
+        const A = a.data();
+        const B = b.data();
+
+        const at = A.createdAtMs ??
+          ((A.createdAt?.seconds || 0) * 1000);
+
+        const bt = B.createdAtMs ??
+          ((B.createdAt?.seconds || 0) * 1000);
+
+        if(at !== bt){
+          return at - bt;
+        }
+
+        return a.id.localeCompare(b.id);
+
+      });
+
+
+      docs.forEach(messageDoc=>{
+
+        const data = messageDoc.data();
+
+        const kind =
+          data.sender === "customer"
+          ? "customer"
+          : "bot";
+
+
+        const bubble = document.createElement("div");
+
+        bubble.className = "msg " + kind;
+
+
+        const label = document.createElement("span");
+
+        label.className = "msg-label";
+
+        label.textContent =
+          kind === "customer"
+          ? "Customer"
+          : "Bot";
+
+
+        const text = document.createElement("span");
+
+        text.textContent = data.text || "";
+
+
+        const time = document.createElement("span");
+
+        time.className = "msg-time";
+
+        time.textContent = formatTime(getTime(data));
+
+
+        bubble.appendChild(label);
+        bubble.appendChild(text);
+        bubble.appendChild(time);
+
+        messagesEl.appendChild(bubble);
+
+      });
+
+
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    },
+
+    error=>{
+
+      showError(friendlyError(error));
+
+    }
+
+  );
+
+}
+
+
+/* AUTH CHECK */
+
+onAuthStateChanged(auth,async user=>{
+
+  if(!user){
+
+    location.replace("admin-login.html");
+
+    return;
+
+  }
+
+
+  try{
+
+    statusEl.textContent = "Checking admin...";
+
+
+    /* CHECK ADMIN ROLE */
+
+    const userSnap = await getDoc(
+      doc(db,"users",user.uid)
+    );
+
+
+    if(!userSnap.exists() ||
+       userSnap.data().role !== "admin"){
+
+      alert("আপনার Admin Permission নেই।");
+
+      await auth.signOut();
+
+      location.replace("admin-login.html");
+
+      return;
+
+    }
+
+
+    statusEl.textContent = "Online";
+
+    clearError();
+
+
+    /* LISTEN TO ALL CHATS */
+
+    if(stopChats){
+      stopChats();
+    }
+
+
+    stopChats = onSnapshot(
+
+      collection(db,"chats"),
+
+      snapshot=>{
+
+        chatsCache = snapshot.docs.map(chatDoc=>({
+
+          id:chatDoc.id,
+
+          data:chatDoc.data()
+
+        }));
+
+
+        renderChatList();
+
+
+        /* UPDATE SELECTED CHAT INFO */
+
+        if(activeChatId){
+
+          const selected = chatsCache.find(
+            chat=>chat.id === activeChatId
+          );
+
+          if(selected){
+
+            chatTitleEl.textContent =
+              selected.data.name || "Customer Conversation";
+
+          }else{
+
+            activeChatId = null;
+
+            if(stopMessages){
+              stopMessages();
+              stopMessages = null;
+            }
+
+            chatTitleEl.textContent = "Customer Conversation";
+
+            selectedInfoEl.textContent =
+              "বাম পাশ থেকে একজন Customer নির্বাচন করুন।";
+
+            messagesEl.innerHTML =
+              '<div id="emptyState">Chat পাওয়া যায়নি।</div>';
+
+          }
+
+        }
+
+      },
+
+      error=>{
+
+        statusEl.textContent = "Error";
+
+        showError(friendlyError(error));
+
+      }
+
+    );
+
+
+  }catch(error){
+
+    statusEl.textContent = "Setup error";
+
+    showError(friendlyError(error));
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
