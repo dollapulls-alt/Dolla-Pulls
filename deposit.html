@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#160923"><title>Dolla Pulls | Credit Support</title>
+<style>
+*{box-sizing:border-box}:root{color-scheme:dark}
+body{margin:0;background:#0d0318;color:#fff;font-family:Arial,"Noto Sans Bengali",sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#29103e,#160923);padding:17px 16px;border-bottom:1px solid #45245d;position:sticky;top:0;z-index:5}
+.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:#8b36c9;display:grid;place-items:center;font-weight:800;font-size:18px;flex-shrink:0}
+h1{font-size:18px;margin:0 0 4px}.sub{font-size:12px;color:#c9b4d8}.status{margin-left:auto;font-size:11px;color:#a7f3d0}
+main{max-width:760px;margin:auto;padding:18px 13px 100px}
+.intro{background:#1b0c29;border:1px solid #422458;border-radius:17px;padding:16px;margin-bottom:15px}
+.intro h2{font-size:17px;margin:0 0 8px}.intro p{font-size:13px;line-height:1.6;color:#d6c5e1;margin:0}
+#messages{display:flex;flex-direction:column;gap:11px}
+.msg{max-width:90%;padding:12px 14px;border-radius:15px;font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:#241333;border:1px solid #4b2c60;border-bottom-left-radius:4px}
+.user{align-self:flex-end;background:#7133a0;border:1px solid #9254bc;border-bottom-right-radius:4px}
+.msg small{display:block;font-size:10px;color:#cdb9da;margin-top:5px}
+.panel{background:#21102f;border:1px solid #59336d;border-radius:15px;padding:13px;margin-top:13px}
+.panel label{display:block;font-size:13px;color:#e8d9f1;margin-bottom:8px}
+.entryrow{display:flex;gap:8px}.entryrow input{min-width:0;flex:1;background:#10071a;border:1px solid #76518b;border-radius:10px;color:#fff;padding:12px;font-size:15px;outline:none}
+.entryrow input:focus{border-color:#c18ae0}
+.send{background:#8b36c9;color:#fff;border-radius:10px;padding:0 17px;font-weight:700;min-width:76px}
+.send:disabled,.choice:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+button{font:inherit;border:0;cursor:pointer}
+.choice{background:#7133a0;color:#fff;border:1px solid #a66acb;border-radius:12px;padding:12px 15px;font-size:14px;font-weight:700}
+.copyline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.copy{background:#402052;color:#fff;border:1px solid #8d5aa9;padding:8px 12px;border-radius:9px;font-size:12px}
+.note{font-size:11px;color:#bda9cb;text-align:center;margin-top:18px}
+#loading{padding:35px;text-align:center;color:#cdb9da;font-size:13px}
+.error{background:#4a1720;border:1px solid #9c3947;color:#ffd9df;padding:12px;border-radius:10px;font-size:13px;margin:12px 0;display:none}
+[hidden]{display:none!important}
+@media(max-width:480px){main{padding:13px 10px 85px}.msg{max-width:95%}.choice{flex:1 1 42%}.send{min-width:68px;padding:0 13px}}
+</style></head>
+<body>
+<header><div class="head"><div class="logo">DP</div><div><h1>Dolla Pulls</h1><div class="sub">Credit Number Support</div></div><div class="status" id="status">Connecting…</div></div></header>
+<main>
+<section class="intro"><h2>Credit নাম্বার প্রয়োজন</h2><p>আপনার প্রয়োজনীয় ক্রেডিটের পরিমাণ লিখুন। এরপর পেমেন্ট পদ্ধতি নির্বাচন করে লেনদেন আইডি জমা দিন।</p></section>
+<div id="error" class="error"></div><div id="loading">আপনার অ্যাকাউন্ট সংযুক্ত হচ্ছে…</div>
+<section id="messages" aria-live="polite"></section>
+<section class="panel" id="amountPanel" hidden><label for="amountInput">কত পরিমাণ Credit করতে চান? (৳)</label><div class="entryrow"><input id="amountInput" type="number" min="1" max="1000000" step="1" inputmode="numeric" placeholder="পরিমাণ লিখুন"><button class="send" id="amountSend" type="button">Send</button></div></section>
+<div class="actions" id="choices" hidden>
+<button class="choice" data-method="বিকাশ" type="button">বিকাশ</button><button class="choice" data-method="নগদ" type="button">নগদ</button><button class="choice" data-method="উপায়" type="button">উপায়</button><button class="choice" data-method="সরাসরি ব্যাংক" type="button">সরাসরি ব্যাংক</button>
+</div>
+<section class="panel" id="trxPanel" hidden><label for="trxInput">আপনার Transaction ID লিখুন</label><div class="entryrow"><input id="trxInput" type="text" maxlength="120" autocomplete="off" placeholder="লেনদেন আইডি লিখুন"><button class="send" id="trxSend" type="button">Send</button></div></section>
+<p class="note">Dolla Pulls Customer Support</p>
+</main>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,collection,addDoc,onSnapshot,query,where,orderBy,serverTimestamp,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+ authDomain:"dolla-pulls.firebaseapp.com",projectId:"dolla-pulls",
+ storageBucket:"dolla-pulls.firebasestorage.app",messagingSenderId:"952761946013",
+ appId:"1:952761946013:web:72fe061231ee8951c0e974"
+};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+const $=id=>document.getElementById(id);
+const messagesEl=$("messages"),amountPanel=$("amountPanel"),amountInput=$("amountInput"),amountSend=$("amountSend"),
+ choicesEl=$("choices"),trxPanel=$("trxPanel"),trxInput=$("trxInput"),trxSend=$("trxSend"),
+ loadingEl=$("loading"),statusEl=$("status"),errorEl=$("error");
+const sessionStartMs=Date.now();
+let currentUser=null,messagesRef=null,chatRef=null,busy=false,firstSnapshot=true,
+ amountValue=null,selectedMethod=null,finished=false;
+const shownIds=new Set();
+
+function showError(s){errorEl.textContent=s;errorEl.style.display="block"}
+function hideError(){errorEl.textContent="";errorEl.style.display="none"}
+function addBubble(text,sender,time=new Date()){
+ const b=document.createElement("div");b.className="msg "+(sender==="customer"?"user":"bot");
+ const c=document.createElement("div");c.textContent=text;b.appendChild(c);
+ const t=document.createElement("small");t.textContent=time.toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit"});b.appendChild(t);
+ messagesEl.appendChild(b);window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+function addInstructionBubble(text,number){
+ const b=document.createElement("div");b.className="msg bot";
+ const c=document.createElement("div");c.textContent=text;b.appendChild(c);
+ const line=document.createElement("div");line.className="copyline";
+ const n=document.createElement("strong");n.textContent=number;line.appendChild(n);
+ const btn=document.createElement("button");btn.className="copy";btn.type="button";btn.textContent="নাম্বার কপি";
+ btn.addEventListener("click",async()=>{
+  try{await navigator.clipboard.writeText(number);btn.textContent="কপি হয়েছে"}
+  catch{const x=document.createElement("textarea");x.value=number;document.body.appendChild(x);x.select();const ok=document.execCommand("copy");x.remove();btn.textContent=ok?"কপি হয়েছে":"কপি করা যায়নি"}
+ });
+ line.appendChild(btn);b.appendChild(line);
+ const t=document.createElement("small");t.textContent=new Date().toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit"});b.appendChild(t);
+ messagesEl.appendChild(b);window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+async function saveMessage(text,sender){
+ const now=Date.now();
+ await addDoc(messagesRef,{text,sender,senderUid:sender==="customer"?currentUser.uid:"bot",createdAt:serverTimestamp(),createdAtMs:now,unreadByAdmin:sender==="customer"});
+ await updateDoc(chatRef,{lastMessage:text,updatedAt:serverTimestamp(),updatedAtMs:now,...(sender==="customer"?{unreadByAdmin:true}:{})});
+}
+function instructions(method){
+ if(method==="সরাসরি ব্যাংক")return {
+  text:"আপনি ৳"+amountValue+" Credit করতে চেয়েছেন। সরাসরি ব্যাংকের মাধ্যমে পেমেন্ট করতে নিকটস্থ ব্যাংক বুথে গিয়ে Cardless Deposit নির্বাচন করুন। এরপর নিচের Account Number-এ টাকা জমা দিন। টাকা জমা দেওয়ার পর Transaction ID নিচের ঘরে লিখে Send করুন।",
+  number:"17459614758",
+  saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য সরাসরি ব্যাংক নির্বাচন করা হয়েছে। Cardless Deposit Account Number: 17459614758।"
+ };
+ return {
+  text:"আপনি ৳"+amountValue+" Credit করতে চেয়েছেন। "+method+" দিয়ে পেমেন্ট করতে Transfer Money নির্বাচন করুন। এরপর Visa Card নির্বাচন করে নিচের Visa Card Number ব্যবহার করুন। পেমেন্ট সম্পন্ন হলে Transaction ID নিচের ঘরে লিখে Send করুন।",
+  number:"331256",
+  saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য "+method+" নির্বাচন করা হয়েছে। Transfer Money → Visa Card, Visa Card Number: 331256।"
+ };
+}
+async function submitAmount(){
+ if(busy||!currentUser)return;
+ const amount=Number(amountInput.value);
+ if(!Number.isFinite(amount)||amount<1||amount>1000000){showError("১ থেকে ১০,০০,০০০ টাকার মধ্যে সঠিক পরিমাণ লিখুন।");amountInput.focus();return}
+ busy=true;amountSend.disabled=true;hideError();
+ try{
+  amountValue=amount;
+  await saveMessage("আমি ৳"+amountValue+" Credit করতে চাই।","customer");
+  amountPanel.hidden=true;
+  await saveMessage("আপনি ৳"+amountValue+" Credit করতে চান। অনুগ্রহ করে নিচের পেমেন্ট পদ্ধতি নির্বাচন করুন।","bot");
+  choicesEl.hidden=false;
+ }catch(e){console.error(e);showError("পরিমাণ পাঠানো যায়নি। Firebase/Firestore Rules পরীক্ষা করুন।");amountSend.disabled=false}
+ finally{busy=false}
+}
+async function selectMethod(method){
+ if(busy||!currentUser||finished||!amountValue)return;
+ busy=true;document.querySelectorAll(".choice").forEach(b=>b.disabled=true);hideError();
+ try{
+  selectedMethod=method;
+  await saveMessage("পেমেন্ট পদ্ধতি নির্বাচন করেছি: "+method,"customer");
+  const d=instructions(method);await saveMessage(d.saved,"bot");
+  choicesEl.hidden=true;addInstructionBubble(d.text,d.number);trxPanel.hidden=false;trxInput.focus();
+ }catch(e){console.error(e);showError("পেমেন্ট পদ্ধতি পাঠানো যায়নি। Firebase/Firestore Rules পরীক্ষা করুন।");document.querySelectorAll(".choice").forEach(b=>b.disabled=false)}
+ finally{busy=false}
+}
+async function submitTrx(){
+ if(busy||!currentUser||finished)return;
+ const trx=trxInput.value.trim();
+ if(!trx){showError("অনুগ্রহ করে Transaction ID লিখুন।");trxInput.focus();return}
+ if(!amountValue||!selectedMethod){showError("প্রথমে Credit-এর পরিমাণ ও পেমেন্ট পদ্ধতি নির্বাচন করুন।");return}
+ busy=true;trxSend.disabled=true;hideError();
+ try{
+  await saveMessage("Transaction ID জমা দিয়েছি: "+trx+" | Credit Amount: ৳"+amountValue+" | Payment Method: "+selectedMethod,"customer");
+  trxPanel.hidden=true;finished=true;
+  await saveMessage("ধন্যবাদ! আপনার Transaction ID গ্রহণ করা হয়েছে। Admin আপনার পেমেন্ট যাচাই করবেন। যাচাই সম্পন্ন হলে আপনার অ্যাকাউন্টে Credit যোগ করা হবে।","bot");
+ }catch(e){console.error(e);showError("Transaction ID পাঠানো যায়নি। আবার চেষ্টা করুন।");trxSend.disabled=false}
+ finally{busy=false}
+}
+$("amountSend").addEventListener("click",submitAmount);
+amountInput.addEventListener("keydown",e=>{if(e.key==="Enter")submitAmount()});
+trxSend.addEventListener("click",submitTrx);
+trxInput.addEventListener("keydown",e=>{if(e.key==="Enter")submitTrx()});
+document.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>selectMethod(b.dataset.method)));
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){window.location.href="index.html";return}
+ currentUser=user;
+ try{
+  const p=await getDoc(doc(db,"users",user.uid)),profile=p.exists()?p.data():{};
+  chatRef=doc(db,"chats",user.uid);messagesRef=collection(chatRef,"messages");
+  const chat=await getDoc(chatRef);
+  if(!chat.exists()){
+   await setDoc(chatRef,{uid:user.uid,name:profile.name||user.displayName||"Customer",phone:profile.phone||"",createdAt:serverTimestamp(),updatedAt:serverTimestamp(),updatedAtMs:Date.now(),unreadByAdmin:false,lastMessage:""});
+  }else{
+   await updateDoc(chatRef,{name:profile.name||user.displayName||"Customer",phone:profile.phone||"",updatedAt:serverTimestamp(),updatedAtMs:Date.now()});
+  }
+  const q=query(messagesRef,where("createdAtMs",">",sessionStartMs),orderBy("createdAtMs","asc"));
+  onSnapshot(q,snap=>{
+   loadingEl.style.display="none";statusEl.textContent="Connected";
+   snap.docChanges().forEach(change=>{
+    if(change.type!=="added"||shownIds.has(change.doc.id))return;
+    shownIds.add(change.doc.id);const d=change.doc.data();
+    if(d.sender==="bot"&&String(d.text||"").startsWith("[PAYMENT_INSTRUCTION]"))return;
+    addBubble(d.text||"",d.sender||"bot",d.createdAt?.toDate?.()||new Date(d.createdAtMs||Date.now()));
+   });
+   if(firstSnapshot){firstSnapshot=false;addBubble("আপনাকে স্বাগতম। প্রথমে বলুন, আপনি কত পরিমাণ Credit করতে চান?","bot");amountPanel.hidden=false}
+  },e=>{console.error(e);loadingEl.style.display="none";statusEl.textContent="Offline";showError("চ্যাট লোড করা যায়নি। Firestore Rules বা Firebase সংযোগ পরীক্ষা করুন।")});
+ }catch(e){console.error(e);loadingEl.style.display="none";statusEl.textContent="Error";showError("অ্যাকাউন্ট সংযুক্ত করা যায়নি। Firebase Rules ও লগইন পরীক্ষা করুন।")}
+});
+</script></body></html>
