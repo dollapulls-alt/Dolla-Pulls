@@ -174,7 +174,7 @@ onAuthStateChanged(auth,async user=>{
     addBubble(d.text||"",d.sender||"bot",d.createdAt?.toDate?.()||new Date(d.createdAtMs||Date.now()));
    });
    if(firstSnapshot){firstSnapshot=false;addBubble("Welcome to credit, input Dollar amounts","bot");amountPanel.hidden=false}
-  },e=>{console.error(e);loadingEl.style.display="none";statusEl.textContent="Offline";showError("চ্যাট লোড করা যায়নি। Firestore Rules বা Firebase সংযোগ পরীক্ষা করুন।")});
- }catch(e){console.error(e);loadingEl.style.display="none";statusEl.textContent="Error";showError("অ্যাকাউন্ট সংযুক্ত করা যায়নি। Firebase Rules ও লগইন পরীক্ষা করুন।")}
+  },e=>{console.error(e);loadingEl.style.display="none";statusEl.textContent="Offline";showError("loading error Firestore Rules or check Firebase connection")});
+ }catch(e){console.error(e);loadingEl.style.display="none";statusEl.textContent="Error";showError("account connection fail. Firebase Rules and check login")}
 });
 </script></body></html>
