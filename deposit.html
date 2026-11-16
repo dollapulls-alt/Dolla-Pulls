@@ -100,26 +100,26 @@ function instructions(method){
  if(method==="CRM from atm booth")return {
   text:"Your"+amountValue+" Credit Amount. Go to the nearest atm booth and use the cardless and deposit the specified amount into the designated account. After making the cardless deposit,send the transaction ID.",
   number:"XXXXXXXXXXXXX",
-  saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য সরাসরি ব্যাংক নির্বাচন করা হয়েছে। Cardless Deposit Account Number:XXXXXXXXXXXXX"
+  saved:"[PAYMENT_INSTRUCTION] The 'CRM from ATM booth' option has been selected for the 💲"+amountValue" Credit. Cardless Deposit Account Number:XXXXXXXXXXXXX"
  };
  return {
   text:"Credit"+amountValue+"Dollars Select transfer amount from "+method+" Then select VISA DEBIT CARD and send Transaction ID after payment",
-  number:"331256",
-  saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য "+method+" নির্বাচন করা হয়েছে। Transfer Money → Visa Card, Visa Card Number: 331256।"
+  number:"XXXXXXXXXXXXX",
+  saved:"[PAYMENT_INSTRUCTION] Amount 💲"+amountValue+" Credit from "+method+". Transfer Money → Visa Card, Visa Card Number: XXXXXXXXXXXXX"
  };
 }
 async function submitAmount(){
  if(busy||!currentUser)return;
  const amount=Number(amountInput.value);
- if(!Number.isFinite(amount)||amount<1||amount>1000000){showError("১ থেকে ১০,০০,০০০ টাকার মধ্যে সঠিক পরিমাণ লিখুন।");amountInput.focus();return}
+ if(!Number.isFinite(amount)||amount<1||amount>1000000){showError("Each transaction limit minimum 100 Dollars and maximum 10,00000 Dollars");amountInput.focus();return}
  busy=true;amountSend.disabled=true;hideError();
  try{
   amountValue=amount;
-  await saveMessage("আমি ৳"+amountValue+" Credit করতে চাই।","customer");
+  await saveMessage("Credit "+amountValue+" Dollars","customer");
   amountPanel.hidden=true;
-  await saveMessage("আপনি ৳"+amountValue+" Credit করতে চান। অনুগ্রহ করে নিচের পেমেন্ট পদ্ধতি নির্বাচন করুন।","bot");
+  await saveMessage("Credit 💲"+amountValue+". Select the payment method","bot");
   choicesEl.hidden=false;
- }catch(e){console.error(e);showError("পরিমাণ পাঠানো যায়নি। Firebase/Firestore Rules পরীক্ষা করুন।");amountSend.disabled=false}
+ }catch(e){console.error(e);showError("The amount could not be sent. Firebase/Firestore Rules Check it");amountSend.disabled=false}
  finally{busy=false}
 }
 async function selectMethod(method){
@@ -127,23 +127,23 @@ async function selectMethod(method){
  busy=true;document.querySelectorAll(".choice").forEach(b=>b.disabled=true);hideError();
  try{
   selectedMethod=method;
-  await saveMessage("পেমেন্ট পদ্ধতি নির্বাচন করেছি: "+method,"customer");
+  await saveMessage("I have selected a payment method: "+method,"customer");
   const d=instructions(method);await saveMessage(d.saved,"bot");
   choicesEl.hidden=true;addInstructionBubble(d.text,d.number);trxPanel.hidden=false;trxInput.focus();
- }catch(e){console.error(e);showError("পেমেন্ট পদ্ধতি পাঠানো যায়নি। Firebase/Firestore Rules পরীক্ষা করুন।");document.querySelectorAll(".choice").forEach(b=>b.disabled=false)}
+ }catch(e){console.error(e);showError("Payment method could not be sent. Firebase/Firestore Rules check it");document.querySelectorAll(".choice").forEach(b=>b.disabled=false)}
  finally{busy=false}
 }
 async function submitTrx(){
  if(busy||!currentUser||finished)return;
  const trx=trxInput.value.trim();
- if(!trx){showError("অনুগ্রহ করে Transaction ID লিখুন।");trxInput.focus();return}
- if(!amountValue||!selectedMethod){showError("প্রথমে Credit-এর পরিমাণ ও পেমেন্ট পদ্ধতি নির্বাচন করুন।");return}
+ if(!trx){showError("Input Transaction ID");trxInput.focus();return}
+ if(!amountValue||!selectedMethod){showError("fast select credit amount and payment method");return}
  busy=true;trxSend.disabled=true;hideError();
  try{
-  await saveMessage("Transaction ID জমা দিয়েছি: "+trx+" | Credit Amount: ৳"+amountValue+" | Payment Method: "+selectedMethod,"customer");
+  await saveMessage("Transaction ID submit successful: "+trx+" | Credit Amount: ৳"+amountValue+" | Payment Method: "+selectedMethod,"customer");
   trxPanel.hidden=true;finished=true;
-  await saveMessage("ধন্যবাদ! আপনার Transaction ID গ্রহণ করা হয়েছে। Admin আপনার পেমেন্ট যাচাই করবেন। যাচাই সম্পন্ন হলে আপনার অ্যাকাউন্টে Credit যোগ করা হবে।","bot");
- }catch(e){console.error(e);showError("Transaction ID পাঠানো যায়নি। আবার চেষ্টা করুন।");trxSend.disabled=false}
+  await saveMessage("Transaction ID accepted. Dolla Pulls will verify your payment. Once the verification is complete, credit will be added to your account.","bot");
+ }catch(e){console.error(e);showError("Transaction ID error. Try again");trxSend.disabled=false}
  finally{busy=false}
 }
 $("amountSend").addEventListener("click",submitAmount);
@@ -173,7 +173,7 @@ onAuthStateChanged(auth,async user=>{
     if(d.sender==="bot"&&String(d.text||"").startsWith("[PAYMENT_INSTRUCTION]"))return;
     addBubble(d.text||"",d.sender||"bot",d.createdAt?.toDate?.()||new Date(d.createdAtMs||Date.now()));
    });
-   if(firstSnapshot){firstSnapshot=false;addBubble("আপনাকে স্বাগতম। প্রথমে বলুন, আপনি কত পরিমাণ Credit করতে চান?","bot");amountPanel.hidden=false}
+   if(firstSnapshot){firstSnapshot=false;addBubble("Welcome to credit, input Dollar amounts","bot");amountPanel.hidden=false}
   },e=>{console.error(e);loadingEl.style.display="none";statusEl.textContent="Offline";showError("চ্যাট লোড করা যায়নি। Firestore Rules বা Firebase সংযোগ পরীক্ষা করুন।")});
  }catch(e){console.error(e);loadingEl.style.display="none";statusEl.textContent="Error";showError("অ্যাকাউন্ট সংযুক্ত করা যায়নি। Firebase Rules ও লগইন পরীক্ষা করুন।")}
 });
