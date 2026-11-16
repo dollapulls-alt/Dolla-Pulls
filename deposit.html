@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#160923">
+<title>Dolla Pulls | Credit Support</title>
+
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:dark}
+body{margin:0;background:#0d0318;color:#fff;font-family:Arial,"Noto Sans English",sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#29103e,#160923);padding:17px 16px;border-bottom:1px solid #45245d;position:sticky;top:0;z-index:5}
+.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:#8b36c9;display:grid;place-items:center;font-weight:800;font-size:18px;flex-shrink:0}
+h1{font-size:18px;margin:0 0 4px}
+.sub{font-size:12px;color:#c9b4d8}
+.status{margin-left:auto;font-size:11px;color:#a7f3d0}
+main{max-width:760px;margin:auto;padding:18px 13px 100px}
+.intro{background:#1b0c29;border:1px solid #422458;border-radius:17px;padding:16px;margin-bottom:15px}
+.intro h2{font-size:17px;margin:0 0 8px}
+.intro p{font-size:13px;line-height:1.6;color:#d6c5e1;margin:0}
+#messages{display:flex;flex-direction:column;gap:11px}
+.msg{max-width:90%;padding:12px 14px;border-radius:15px;font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:#241333;border:1px solid #4b2c60;border-bottom-left-radius:4px}
+.user{align-self:flex-end;background:#7133a0;border:1px solid #9254bc;border-bottom-right-radius:4px}
+.msg small{display:block;font-size:10px;color:#cdb9da;margin-top:5px}
+.panel{background:#21102f;border:1px solid #59336d;border-radius:15px;padding:13px;margin-top:13px}
+.panel label{display:block;font-size:13px;color:#e8d9f1;margin-bottom:8px}
+.entryrow{display:flex;gap:8px}
+.entryrow input{min-width:0;flex:1;background:#10071a;border:1px solid #76518b;border-radius:10px;color:#fff;padding:12px;font-size:15px;outline:none}
+.entryrow input:focus{border-color:#c18ae0}
+.send{background:#8b36c9;color:#fff;border-radius:10px;padding:0 17px;font-weight:700;min-width:76px}
+.send:disabled,.choice:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+button{font:inherit;border:0;cursor:pointer}
+.choice{background:#7133a0;color:#fff;border:1px solid #a66acb;border-radius:12px;padding:12px 15px;font-size:14px;font-weight:700}
+.copyline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.copy{background:#402052;color:#fff;border:1px solid #8d5aa9;padding:8px 12px;border-radius:9px;font-size:12px}
+.note{font-size:11px;color:#bda9cb;text-align:center;margin-top:18px}
+#loading{padding:35px;text-align:center;color:#cdb9da;font-size:13px}
+.error{background:#4a1720;border:1px solid #9c3947;color:#ffd9df;padding:12px;border-radius:10px;font-size:13px;margin:12px 0;display:none}
+[hidden]{display:none!important}
+@media(max-width:480px){
+ main{padding:13px 10px 85px}
+ .msg{max-width:95%}
+ .choice{flex:1 1 42%}
+ .send{min-width:68px;padding:0 13px}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <div class="head">
+  <div class="logo">🇦🇸</div>
+  <div>
+   <h1>Dolla Pulls</h1>
+   <div class="sub">Credit Support</div>
+  </div>
+  <div class="status" id="status">Connecting…</div>
+ </div>
+</header>
+
+<main>
+ <section class="intro">
+  <h2>Credit Options</h2>
+  <p>Enter the amount of credit you need. Then, select a payment method and submit the transaction ID.</p>
+ </section>
+
+ <div id="error" class="error"></div>
+ <div id="loading">Your request is being processed……</div>
+ <section id="messages" aria-live="polite"></section>
+
+ <section class="panel" id="amountPanel" hidden>
+  <label for="amountInput">Dollar amount</label>
+  <div class="entryrow">
+   <input id="amountInput" type="number" min="100" max="1000000" step="1" inputmode="numeric" placeholder="Amount In Dollars">
+   <button class="send" id="amountSend" type="button">Send</button>
+  </div>
+ </section>
+
+ <div class="actions" id="choices" hidden>
+  <button class="choice" data-method="Bkash" type="button">Bkash</button>
+  <button class="choice" data-method="Nagad" type="button">Nagad</button>
+  <button class="choice" data-method="Upay" type="button">Upay</button>
+  <button class="choice" data-method="CRM from atm booth" type="button">CRM from atm booth</button>
+ </div>
+
+ <section class="panel" id="trxPanel" hidden>
+  <label for="trxInput">Transaction ID</label>
+  <div class="entryrow">
+   <input id="trxInput" type="text" maxlength="120" autocomplete="off" placeholder="Transaction ID">
+   <button class="send" id="trxSend" type="button">Send</button>
+  </div>
+ </section>
+
+ <p class="note">Dolla Pulls Customer Support</p>
+</main>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {getAuth,onAuthStateChanged}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+ getFirestore,
+ doc,
+ getDoc,
+ setDoc,
+ collection,
+ addDoc,
+ onSnapshot,
+ query,
+ where,
+ orderBy,
+ serverTimestamp,
+ updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+/* FIREBASE CONFIGURATION */
+
+const firebaseConfig={
+ apiKey:"AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+ authDomain:"dolla-pulls.firebaseapp.com",
+ projectId:"dolla-pulls",
+ storageBucket:"dolla-pulls.firebasestorage.app",
+ messagingSenderId:"952761946013",
+ appId:"1:952761946013:web:72fe061231ee8951c0e974"
+};
+
+
+/* GOOGLE APPS SCRIPT CONFIGURATION */
+
+const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbxHvdz28rbnvZxOIMz7Ki-LL9Rk16b0mSnY_-MS61worBwKjems3FNtu_FVIQ9fA0yA/exec";
+
+// Must exactly match SECRET_KEY in Apps Script
+const EMAIL_SHARED_TOKEN="DOLLA_PULLS_2026_CHANGE_THIS";
+
+
+/* INITIALIZE FIREBASE */
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+
+const messagesEl=$("messages");
+const amountPanel=$("amountPanel");
+const amountInput=$("amountInput");
+const amountSend=$("amountSend");
+const choicesEl=$("choices");
+const trxPanel=$("trxPanel");
+const trxInput=$("trxInput");
+const trxSend=$("trxSend");
+const loadingEl=$("loading");
+const statusEl=$("status");
+const errorEl=$("error");
+
+const sessionStartMs=Date.now();
+
+let currentUser=null;
+let messagesRef=null;
+let chatRef=null;
+let busy=false;
+let firstSnapshot=true;
+let amountValue=null;
+let selectedMethod=null;
+let finished=false;
+let customerProfile={};
+
+const shownIds=new Set();
+
+
+/* ERROR MESSAGES */
+
+function showError(s){
+ errorEl.textContent=s;
+ errorEl.style.display="block";
+}
+
+function hideError(){
+ errorEl.textContent="";
+ errorEl.style.display="none";
+}
+
+
+/* CHAT BUBBLE */
+
+function addBubble(text,sender,time=new Date()){
+
+ const b=document.createElement("div");
+ b.className="msg "+(sender==="customer"?"user":"bot");
+
+ const c=document.createElement("div");
+ c.textContent=text;
+ b.appendChild(c);
+
+ const t=document.createElement("small");
+
+ t.textContent=time.toLocaleTimeString("en-US",{
+  hour:"2-digit",
+  minute:"2-digit",
+  hour12:true
+ });
+
+ b.appendChild(t);
+ messagesEl.appendChild(b);
+
+ window.scrollTo({
+  top:document.body.scrollHeight,
+  behavior:"smooth"
+ });
+}
+
+
+/* PAYMENT INSTRUCTION BUBBLE */
+
+function addInstructionBubble(text,number){
+
+ const b=document.createElement("div");
+ b.className="msg bot";
+
+ const c=document.createElement("div");
+ c.textContent=text;
+ b.appendChild(c);
+
+ const line=document.createElement("div");
+ line.className="copyline";
+
+ const n=document.createElement("strong");
+ n.textContent=number;
+ line.appendChild(n);
+
+ const btn=document.createElement("button");
+ btn.className="copy";
+ btn.type="button";
+ btn.textContent="Copy";
+
+ btn.addEventListener("click",async()=>{
+
+  try{
+   await navigator.clipboard.writeText(number);
+   btn.textContent="Copied";
+  }catch{
+
+   const x=document.createElement("textarea");
+   x.value=number;
+   document.body.appendChild(x);
+   x.select();
+
+   const ok=document.execCommand("copy");
+   x.remove();
+
+   btn.textContent=ok?"Copied":"Try again";
+  }
+
+ });
+
+ line.appendChild(btn);
+ b.appendChild(line);
+
+ const t=document.createElement("small");
+
+ t.textContent=new Date().toLocaleTimeString("en-US",{
+  hour:"2-digit",
+  minute:"2-digit",
+  hour12:true
+ });
+
+ b.appendChild(t);
+ messagesEl.appendChild(b);
+
+ window.scrollTo({
+  top:document.body.scrollHeight,
+  behavior:"smooth"
+ });
+}
+
+
+/* SAVE CHAT MESSAGE */
+
+async function saveMessage(text,sender){
+
+ const now=Date.now();
+
+ await addDoc(messagesRef,{
+  text,
+  sender,
+  senderUid:sender==="customer"?currentUser.uid:"system",
+  createdAt:serverTimestamp(),
+  createdAtMs:now,
+  unreadByAdmin:sender==="customer"
+ });
+
+ await updateDoc(chatRef,{
+  lastMessage:text,
+  updatedAt:serverTimestamp(),
+  updatedAtMs:now,
+  ...(sender==="customer"?{unreadByAdmin:true}:{})
+ });
+}
+
+
+/* PAYMENT INSTRUCTIONS */
+
+function instructions(method){
+
+ if(method==="CRM from atm booth"){
+
+  return {
+   text:"Your $"+amountValue+" Credit Amount. Go to the nearest ATM booth and use the cardless deposit option to deposit the specified amount into the designated account. After making the cardless deposit, send the transaction ID.",
+   number:"XXXXXXXXXXXXX",
+   saved:"[PAYMENT_INSTRUCTION] The 'CRM from ATM booth' option has been selected for the $"+amountValue+" Credit. Cardless Deposit Account Number: XXXXXXXXXXXXX"
+  };
+
+ }
+
+ return {
+  text:"Credit $"+amountValue+". Select transfer amount from "+method+", then select VISA DEBIT CARD and send the Transaction ID after payment.",
+  number:"XXXXXXXXXXXXX",
+  saved:"[PAYMENT_INSTRUCTION] Amount $"+amountValue+" Credit from "+method+". Transfer Money → Visa Card, Visa Card Number: XXXXXXXXXXXXX"
+ };
+
+}
+
+
+/* SEND EMAIL NOTIFICATION THROUGH APPS SCRIPT */
+
+async function sendAdminEmail(depositData){
+
+ const payload={
+
+  secret:EMAIL_SHARED_TOKEN,
+
+  event:"request",
+
+  requestId:depositData.requestId,
+
+  uid:depositData.uid,
+
+  customerName:depositData.customerName,
+
+  phone:depositData.customerPhone,
+
+  amount:depositData.amount,
+
+  method:depositData.method,
+
+  transactionId:depositData.trxId
+
+ };
+
+ if(!payload.requestId){
+  console.error("Email notification skipped: Request ID missing.");
+  return false;
+ }
+
+ try{
+
+  await fetch(APPS_SCRIPT_URL,{
+
+   method:"POST",
+
+   mode:"no-cors",
+
+   headers:{
+    "Content-Type":"text/plain;charset=utf-8"
+   },
+
+   body:JSON.stringify(payload)
+
+  });
+
+  /*
+   no-cors response is opaque.
+   This means request dispatch completed.
+   It does NOT confirm Gmail delivery.
+  */
+
+  console.log(
+   "Admin email request dispatched:",
+   payload.requestId
+  );
+
+  return true;
+
+ }catch(error){
+
+  console.error("Admin email request failed:",error);
+
+  return false;
+
+ }
+
+}
+
+
+/* SUBMIT CREDIT AMOUNT */
+
+async function submitAmount(){
+
+ if(busy||!currentUser)return;
+
+ const amount=Number(amountInput.value);
+
+ if(!Number.isFinite(amount)||amount<100||amount>1000000){
+
+  showError("Each transaction limit minimum 100 Dollars and maximum 10,00,000 Dollars");
+
+  amountInput.focus();
+  return;
+
+ }
+
+ busy=true;
+ amountSend.disabled=true;
+ hideError();
+
+ try{
+
+  amountValue=amount;
+
+  await saveMessage("Credit $"+amountValue,"customer");
+
+  amountPanel.hidden=true;
+
+  await saveMessage("Credit $"+amountValue+". Select the payment method","bot");
+
+  choicesEl.hidden=false;
+
+ }catch(e){
+
+  console.error(e);
+
+  showError("The amount could not be sent. Please check Firebase/Firestore Rules.");
+
+  amountSend.disabled=false;
+
+ }finally{
+
+  busy=false;
+
+ }
+
+}
+
+
+/* SELECT PAYMENT METHOD */
+
+async function selectMethod(method){
+
+ if(busy||!currentUser||finished||!amountValue)return;
+
+ busy=true;
+
+ document.querySelectorAll(".choice").forEach(b=>{
+  b.disabled=true;
+ });
+
+ hideError();
+
+ try{
+
+  selectedMethod=method;
+
+  await saveMessage("I have selected a payment method: "+method,"customer");
+
+  const d=instructions(method);
+
+  await saveMessage(d.saved,"bot");
+
+  choicesEl.hidden=true;
+
+  addInstructionBubble(d.text,d.number);
+
+  trxPanel.hidden=false;
+  trxInput.focus();
+
+ }catch(e){
+
+  console.error(e);
+
+  showError("Payment method could not be sent. Please check Firebase/Firestore Rules.");
+
+  document.querySelectorAll(".choice").forEach(b=>{
+   b.disabled=false;
+  });
+
+ }finally{
+
+  busy=false;
+
+ }
+
+}
+
+
+/* SUBMIT TRANSACTION ID AND CREATE PENDING DEPOSIT */
+
+async function submitTrx(){
+
+ if(busy||!currentUser||finished)return;
+
+ const trx=trxInput.value.trim();
+
+ if(!trx){
+
+  showError("Input Transaction ID");
+  trxInput.focus();
+  return;
+
+ }
+
+ if(!amountValue||!selectedMethod){
+
+  showError("First select credit amount and payment method.");
+  return;
+
+ }
+
+ busy=true;
+ trxSend.disabled=true;
+ hideError();
+
+ try{
+
+  /* DEPOSIT DOCUMENT DATA */
+
+  const depositData={
+
+   uid:currentUser.uid,
+
+   customerName:customerProfile.name||currentUser.displayName||"Customer",
+
+   customerPhone:customerProfile.phone||"",
+
+   amount:amountValue,
+
+   method:selectedMethod,
+
+   trxId:trx,
+
+   status:"pending",
+
+   source:"credit-support",
+
+   createdAt:serverTimestamp()
+
+  };
+
+
+  /* CREATE DEPOSIT IN FIRESTORE */
+
+  const depositRef=await addDoc(
+   collection(db,"deposits"),
+   depositData
+  );
+
+  console.log("Pending deposit created:",depositRef.id);
+
+
+  /* PREVENT DUPLICATE SUBMISSION FROM THIS PAGE */
+
+  finished=true;
+  trxPanel.hidden=true;
+
+
+  addBubble(
+   "Transaction ID submitted successfully: "+trx+
+   " | Credit Amount: $"+amountValue+
+   " | Payment Method: "+selectedMethod,
+   "customer"
+  );
+
+  addBubble(
+   "Your deposit request has been submitted and is now PENDING. Dolla Pulls will verify your payment. Once verification is complete, credit will be added to your account.",
+   "bot"
+  );
+
+
+  /* SEND EMAIL NOTIFICATION */
+
+  // Firestore document ID is the unique request ID.
+  // Admin HTML uses the same requestId for approval/rejection.
+
+  const emailDispatched=await sendAdminEmail({
+
+   requestId:depositRef.id,
+
+   uid:currentUser.uid,
+
+   customerName:depositData.customerName,
+
+   customerPhone:depositData.customerPhone,
+
+   amount:amountValue,
+
+   method:selectedMethod,
+
+   trxId:trx
+
+  });
+
+  if(!emailDispatched){
+   console.error(
+    "Deposit saved, but email request could not be dispatched."
+   );
+  }
+
+
+  /* SAVE TRANSACTION DETAILS TO CUSTOMER SUPPORT CHAT */
+
+  try{
+
+   await saveMessage(
+    "Transaction ID submit successful: "+trx+
+    " | Credit Amount: $"+amountValue+
+    " | Payment Method: "+selectedMethod,
+    "customer"
+   );
+
+   await saveMessage(
+    "Transaction ID accepted. Your deposit request is pending verification. Dolla Pulls will verify your payment. Once verification is complete, credit will be added to your account.",
+    "bot"
+   );
+
+  }catch(chatError){
+
+   console.error("Chat message save error:",chatError);
+
+  }
+
+ }catch(e){
+
+  console.error("Deposit submission error:",e);
+
+  showError(
+   "Deposit request could not be submitted. Please check your internet connection and Firebase Firestore Rules. If you are unsure whether it was submitted, contact support before trying again."
+  );
+
+  trxSend.disabled=false;
+
+ }finally{
+
+  busy=false;
+
+ }
+
+}
+
+
+/* BUTTON EVENTS */
+
+amountSend.addEventListener("click",submitAmount);
+
+amountInput.addEventListener("keydown",e=>{
+ if(e.key==="Enter")submitAmount();
+});
+
+trxSend.addEventListener("click",submitTrx);
+
+trxInput.addEventListener("keydown",e=>{
+ if(e.key==="Enter")submitTrx();
+});
+
+document.querySelectorAll(".choice").forEach(b=>{
+ b.addEventListener("click",()=>{
+  selectMethod(b.dataset.method);
+ });
+});
+
+
+/* FIREBASE AUTHENTICATION AND CHAT CONNECTION */
+
+onAuthStateChanged(auth,async user=>{
+
+ if(!user){
+
+  window.location.href="index.html";
+  return;
+
+ }
+
+ currentUser=user;
+
+ try{
+
+  /* LOAD CUSTOMER PROFILE */
+
+  const profileSnap=await getDoc(doc(db,"users",user.uid));
+
+  customerProfile=profileSnap.exists()?profileSnap.data():{};
+
+  chatRef=doc(db,"chats",user.uid);
+  messagesRef=collection(chatRef,"messages");
+
+  const chat=await getDoc(chatRef);
+
+  if(!chat.exists()){
+
+   await setDoc(chatRef,{
+
+    uid:user.uid,
+
+    name:customerProfile.name||user.displayName||"Customer",
+
+    phone:customerProfile.phone||"",
+
+    createdAt:serverTimestamp(),
+
+    updatedAt:serverTimestamp(),
+
+    updatedAtMs:Date.now(),
+
+    unreadByAdmin:false,
+
+    lastMessage:""
+
+   });
+
+  }else{
+
+   await updateDoc(chatRef,{
+
+    name:customerProfile.name||user.displayName||"Customer",
+
+    phone:customerProfile.phone||"",
+
+    updatedAt:serverTimestamp(),
+
+    updatedAtMs:Date.now()
+
+   });
+
+  }
+
+
+  /* LISTEN TO CURRENT SESSION MESSAGES */
+
+  const q=query(
+
+   messagesRef,
+
+   where("createdAtMs",">",sessionStartMs),
+
+   orderBy("createdAtMs","asc")
+
+  );
+
+  onSnapshot(q,snap=>{
+
+   loadingEl.style.display="none";
+
+   statusEl.textContent="Connected";
+
+   snap.docChanges().forEach(change=>{
+
+    if(change.type!=="added"||shownIds.has(change.doc.id))return;
+
+    shownIds.add(change.doc.id);
+
+    const d=change.doc.data();
+
+    if(
+     d.sender==="bot"&&
+     String(d.text||"").startsWith("[PAYMENT_INSTRUCTION]")
+    ){
+
+     return;
+
+    }
+
+    addBubble(
+
+     d.text||"",
+
+     d.sender||"bot",
+
+     d.createdAt?.toDate?.()||new Date(d.createdAtMs||Date.now())
+
+    );
+
+   });
+
+   if(firstSnapshot){
+
+    firstSnapshot=false;
+
+    addBubble("Welcome to credit, input Dollar amounts","bot");
+
+    amountPanel.hidden=false;
+
+   }
+
+  },e=>{
+
+   console.error(e);
+
+   loadingEl.style.display="none";
+
+   statusEl.textContent="Offline";
+
+   showError("Loading error. Please check Firestore Rules or Firebase connection.");
+
+  });
+
+ }catch(e){
+
+  console.error(e);
+
+  loadingEl.style.display="none";
+
+  statusEl.textContent="Error";
+
+  showError("Account connection failed. Please check Firebase Rules and login.");
+
+ }
+
+});
+
+</script>
+</body>
+</html>
