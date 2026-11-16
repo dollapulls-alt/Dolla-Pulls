@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#160923">
+<title>Dolla Pulls | Credit Number</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:dark}
+body{margin:0;background:#0d0318;color:#fff;font-family:Arial,"Noto Sans Bengali",sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#29103e,#160923);padding:17px 16px;border-bottom:1px solid #45245d;position:sticky;top:0;z-index:5}
+.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:#8b36c9;display:grid;place-items:center;font-weight:800;font-size:18px}
+h1{font-size:18px;margin:0 0 4px}
+.sub{font-size:12px;color:#c9b4d8}
+.status{margin-left:auto;font-size:11px;color:#a7f3d0}
+main{max-width:760px;margin:auto;padding:18px 13px 110px}
+.intro{background:#1b0c29;border:1px solid #422458;border-radius:17px;padding:16px;margin-bottom:15px}
+.intro h2{font-size:17px;margin:0 0 8px}
+.intro p{font-size:13px;line-height:1.6;color:#d6c5e1;margin:0}
+#messages{display:flex;flex-direction:column;gap:11px}
+.msg{max-width:88%;padding:12px 14px;border-radius:15px;font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:#241333;border:1px solid #4b2c60;border-bottom-left-radius:4px}
+.user{align-self:flex-end;background:#7133a0;border:1px solid #9254bc;border-bottom-right-radius:4px}
+.msg small{display:block;font-size:10px;color:#cdb9da;margin-top:5px}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+button{font:inherit;border:0;cursor:pointer}
+.choice{background:#7133a0;color:#fff;border:1px solid #a66acb;border-radius:12px;padding:12px 15px;font-size:14px;font-weight:700}
+.choice:active{transform:scale(.98)}
+.choice:disabled{opacity:.5;cursor:not-allowed}
+.copyline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.copy{background:#402052;color:#fff;border:1px solid #8d5aa9;padding:8px 12px;border-radius:9px;font-size:12px}
+.note{font-size:11px;color:#bda9cb;text-align:center;margin-top:18px}
+#loading{padding:35px;text-align:center;color:#cdb9da;font-size:13px}
+.error{background:#4a1720;border:1px solid #9c3947;color:#ffd9df;padding:12px;border-radius:10px;font-size:13px;margin:12px 0;display:none}
+@media(max-width:480px){main{padding:13px 10px 90px}.msg{max-width:94%}.choice{flex:1 1 42%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <div class="logo">DP</div>
+    <div><h1>Dolla Pulls</h1><div class="sub">Credit Number Support</div></div>
+    <div class="status" id="status">Connecting…</div>
+  </div>
+</header>
+
+<main>
+  <section class="intro">
+    <h2>Credit নাম্বার প্রয়োজন</h2>
+    <p>আপনার পেমেন্ট পদ্ধতি নির্বাচন করুন। নির্বাচনের পর প্রয়োজনীয় নির্দেশনা এখানে দেখানো হবে।</p>
+  </section>
+  <div id="error" class="error"></div>
+  <div id="loading">আপনার অ্যাকাউন্ট সংযুক্ত হচ্ছে…</div>
+  <section id="messages" aria-live="polite"></section>
+  <div class="actions" id="choices" hidden>
+    <button class="choice" data-method="বিকাশ">বিকাশ</button>
+    <button class="choice" data-method="নগদ">নগদ</button>
+    <button class="choice" data-method="উপায়">উপায়</button>
+    <button class="choice" data-method="সরাসরি ব্যাংক">সরাসরি ব্যাংক</button>
+  </div>
+  <p class="note">Dolla Pulls Customer Support</p>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot,
+  query, where, orderBy, serverTimestamp, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+  authDomain: "dolla-pulls.firebaseapp.com",
+  projectId: "dolla-pulls",
+  storageBucket: "dolla-pulls.firebasestorage.app",
+  messagingSenderId: "952761946013",
+  appId: "1:952761946013:web:72fe061231ee8951c0e974"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const messagesEl = document.getElementById("messages");
+const choicesEl = document.getElementById("choices");
+const loadingEl = document.getElementById("loading");
+const statusEl = document.getElementById("status");
+const errorEl = document.getElementById("error");
+const sessionStartMs = Date.now();
+
+let currentUser = null;
+let messagesRef = null;
+let chatRef = null;
+let busy = false;
+let firstSnapshot = true;
+let unsubscribeMessages = null;
+const shownIds = new Set();
+
+function showError(message){
+  errorEl.textContent = message;
+  errorEl.style.display = "block";
+}
+function hideError(){
+  errorEl.textContent = "";
+  errorEl.style.display = "none";
+}
+function addBubble(text, sender, time = new Date()){
+  const bubble = document.createElement("div");
+  bubble.className = "msg " + (sender === "customer" ? "user" : "bot");
+  const content = document.createElement("div");
+  content.textContent = text;
+  bubble.appendChild(content);
+  const stamp = document.createElement("small");
+  stamp.textContent = time.toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit"});
+  bubble.appendChild(stamp);
+  messagesEl.appendChild(bubble);
+  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+function addInstructionBubble(method, text, number){
+  const bubble = document.createElement("div");
+  bubble.className = "msg bot";
+  const content = document.createElement("div");
+  content.textContent = text;
+  bubble.appendChild(content);
+  const copyWrap = document.createElement("div");
+  copyWrap.className = "copyline";
+  const value = document.createElement("strong");
+  value.textContent = number;
+  copyWrap.appendChild(value);
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "copy";
+  copyBtn.textContent = "নাম্বার কপি";
+  copyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(number);
+      copyBtn.textContent = "কপি হয়েছে";
+    } catch {
+      copyBtn.textContent = "কপি করা যায়নি";
+    }
+  });
+  copyWrap.appendChild(copyBtn);
+  bubble.appendChild(copyWrap);
+  const stamp = document.createElement("small");
+  stamp.textContent = new Date().toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit"});
+  bubble.appendChild(stamp);
+  messagesEl.appendChild(bubble);
+  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+async function saveMessage(text, sender){
+  const now = Date.now();
+  await addDoc(messagesRef, {
+    text,
+    sender,
+    senderUid: sender === "customer" ? currentUser.uid : "bot",
+    createdAt: serverTimestamp(),
+    createdAtMs: now,
+    unreadByAdmin: sender === "customer"
+  });
+  await updateDoc(chatRef, {
+    lastMessage: text,
+    updatedAt: serverTimestamp(),
+    updatedAtMs: now,
+    ...(sender === "customer" ? {unreadByAdmin:true} : {})
+  });
+}
+function getInstructions(method){
+  if(method === "সরাসরি ব্যাংক"){
+    return {
+      message:"সরাসরি ব্যাংকের মাধ্যমে Credit নিতে নিকটস্থ ব্যাংক বুথে গিয়ে Cardless Deposit নির্বাচন করুন। এরপর নিচের Account Number-এ টাকা জমা দিন।",
+      number:"17459614758",
+      saved:"সরাসরি ব্যাংক নির্বাচন করা হয়েছে। নির্দেশনা: বুথে Cardless Deposit, Account Number 17459614758।"
+    };
+  }
+  return {
+    message:method+" এর মাধ্যমে Credit নিতে Transfer Money নির্বাচন করুন। এরপর Visa Card নির্বাচন করে নিচের Visa Card Number ব্যবহার করুন।",
+    number:"331256",
+    saved:method+" নির্বাচন করা হয়েছে। নির্দেশনা: Transfer Money → Visa Card, Visa Card Number 331256।"
+  };
+}
+async function selectMethod(method){
+  if(busy || !currentUser) return;
+  busy = true;
+  document.querySelectorAll(".choice").forEach(button => button.disabled = true);
+  hideError();
+  try{
+    await saveMessage("পেমেন্ট পদ্ধতি: " + method, "customer");
+    const details = getInstructions(method);
+    await saveMessage(details.saved, "bot");
+    choicesEl.hidden = true;
+    // The live Firestore listener displays persisted messages; add the number copy control locally.
+    addInstructionBubble(method, details.message, details.number);
+  }catch(error){
+    console.error(error);
+    showError("মেসেজ পাঠানো যায়নি। Firebase সংযোগ ও Firestore Rules পরীক্ষা করুন।");
+    document.querySelectorAll(".choice").forEach(button => button.disabled = false);
+  }finally{
+    busy = false;
+  }
+}
+
+document.querySelectorAll(".choice").forEach(button => {
+  button.addEventListener("click", () => selectMethod(button.dataset.method));
+});
+
+onAuthStateChanged(auth, async user => {
+  if(!user){
+    window.location.href = "index.html";
+    return;
+  }
+  currentUser = user;
+  try{
+    const profileSnap = await getDoc(doc(db,"users",user.uid));
+    const profile = profileSnap.exists() ? profileSnap.data() : {};
+    const name = profile.name || user.displayName || "Customer";
+    const phone = profile.phone || "";
+    chatRef = doc(db,"chats",user.uid);
+    messagesRef = collection(chatRef,"messages");
+
+    await setDoc(chatRef,{
+      uid:user.uid,
+      name,
+      phone,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp(),
+      updatedAtMs:Date.now(),
+      unreadByAdmin:false,
+      lastMessage:""
+    },{merge:true});
+
+    const welcome = "আপনাকে স্বাগতম। Credit নাম্বার পেতে নিচের পেমেন্ট পদ্ধতি নির্বাচন করুন।";
+    const historyQuery = query(messagesRef,where("createdAtMs",">",sessionStartMs),orderBy("createdAtMs","asc"));
+    unsubscribeMessages = onSnapshot(historyQuery, snapshot => {
+      loadingEl.style.display = "none";
+      statusEl.textContent = "Connected";
+      snapshot.docChanges().forEach(change => {
+        const docId = change.doc.id;
+        if(change.type === "added" && !shownIds.has(docId)){
+          shownIds.add(docId);
+          const data = change.doc.data();
+          // The instruction card is rendered locally with a copy control.
+          if(data.sender === "bot" && (String(data.text).includes("Visa Card Number 331256") || String(data.text).includes("Account Number 17459614758"))) return;
+          addBubble(data.text || "",data.sender || "bot",data.createdAt?.toDate?.() || new Date(data.createdAtMs || Date.now()));
+        }
+      });
+      if(firstSnapshot){
+        firstSnapshot = false;
+        addBubble(welcome,"bot");
+        choicesEl.hidden = false;
+      }
+    }, error => {
+      console.error(error);
+      loadingEl.style.display = "none";
+      statusEl.textContent = "Offline";
+      showError("চ্যাট লোড করা যায়নি। Firestore Rules বা সংযোগ পরীক্ষা করুন।");
+    });
+  }catch(error){
+    console.error(error);
+    loadingEl.style.display = "none";
+    statusEl.textContent = "Error";
+    showError("অ্যাকাউন্ট লোড করা যায়নি। অনুগ্রহ করে আবার লগইন করুন।");
+  }
+});
+</script>
+</body>
+</html>
