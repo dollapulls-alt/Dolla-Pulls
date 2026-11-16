@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#160923">
+<title>Dolla Pulls | Credit Support</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:dark;scroll-behavior:smooth}
+body{margin:0;background:#0d0318;color:#fff;font-family:Arial,"Noto Sans",sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#29103e,#160923);padding:17px 16px;border-bottom:1px solid #45245d;position:sticky;top:0;z-index:5}
+.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:#8b36c9;display:grid;place-items:center;font-weight:800;font-size:18px;flex-shrink:0}
+h1{font-size:18px;margin:0 0 4px}
+.sub{font-size:12px;color:#c9b4d8}
+.status{margin-left:auto;font-size:11px;color:#a7f3d0}
+main{max-width:760px;margin:auto;padding:18px 13px 45px}
+.intro{background:#1b0c29;border:1px solid #422458;border-radius:17px;padding:16px;margin-bottom:15px}
+.intro h2{font-size:17px;margin:0 0 8px}
+.intro p{font-size:13px;line-height:1.6;color:#d6c5e1;margin:0}
+.chat-title{font-size:13px;color:#cdb9da;margin:18px 2px 8px}
+#messages{display:flex;flex-direction:column;gap:11px}
+.msg{max-width:90%;padding:12px 14px;border-radius:15px;font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:#241333;border:1px solid #4b2c60;border-bottom-left-radius:4px}
+.user{align-self:flex-end;background:#7133a0;border:1px solid #9254bc;border-bottom-right-radius:4px}
+.msg small{display:block;font-size:10px;color:#cdb9da;margin-top:5px}
+.panel{background:#21102f;border:1px solid #59336d;border-radius:15px;padding:13px;margin-top:13px}
+.panel label{display:block;font-size:13px;color:#e8d9f1;margin-bottom:8px}
+.entryrow{display:flex;gap:8px}
+.entryrow input{min-width:0;flex:1;background:#10071a;border:1px solid #76518b;border-radius:10px;color:#fff;padding:12px;font-size:15px;outline:none}
+.entryrow input:focus{border-color:#c18ae0}
+.send{background:#8b36c9;color:#fff;border-radius:10px;padding:0 17px;font-weight:700;min-width:76px}
+.send:disabled,.choice:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+button{font:inherit;border:0;cursor:pointer}
+.choice{background:#7133a0;color:#fff;border:1px solid #a66acb;border-radius:12px;padding:12px 15px;font-size:14px;font-weight:700}
+.copyline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.copy{background:#402052;color:#fff;border:1px solid #8d5aa9;padding:8px 12px;border-radius:9px;font-size:12px}
+.note{font-size:11px;color:#bda9cb;text-align:center;margin-top:18px}
+#loading{padding:25px 10px;text-align:center;color:#cdb9da;font-size:13px}
+.error{background:#4a1720;border:1px solid #9c3947;color:#ffd9df;padding:12px;border-radius:10px;font-size:13px;margin:12px 0;display:none}
+[hidden]{display:none!important}
+@media(max-width:480px){
+ main{padding:13px 10px 35px}
+ .msg{max-width:95%}
+ .choice{flex:1 1 42%}
+ .send{min-width:68px;padding:0 13px}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="head">
+  <div class="logo">DP</div>
+  <div><h1>Dolla Pulls</h1><div class="sub">Credit Support</div></div>
+  <div class="status" id="status">Connecting…</div>
+ </div>
+</header>
+
+<main>
+ <section class="intro">
+  <h2>Credit Options</h2>
+  <p>Enter the amount of credit you need. Then, select a payment method and submit the transaction ID.</p>
+ </section>
+
+ <div id="error" class="error"></div>
+ <div id="loading">Your request is being processed……</div>
+ <div class="chat-title">Customer Support Chat</div>
+ <section id="messages" aria-live="polite"></section>
+
+ <section class="panel" id="amountPanel" hidden>
+  <label for="amountInput">Dollar amount</label>
+  <div class="entryrow">
+   <input id="amountInput" type="number" min="100" max="1000000" step="1" inputmode="numeric" placeholder="Amount In Dollars">
+   <button class="send" id="amountSend" type="button">Send</button>
+  </div>
+ </section>
+
+ <div class="actions" id="choices" hidden>
+  <button class="choice" data-method="Bkash" type="button">Bkash</button>
+  <button class="choice" data-method="Nagad" type="button">Nagad</button>
+  <button class="choice" data-method="Upay" type="button">Upay</button>
+  <button class="choice" data-method="CRM from atm booth" type="button">CRM from ATM booth</button>
+ </div>
+
+ <section class="panel" id="trxPanel" hidden>
+  <label for="trxInput">Transaction ID</label>
+  <div class="entryrow">
+   <input id="trxInput" type="text" maxlength="120" autocomplete="off" placeholder="Transaction ID">
+   <button class="send" id="trxSend" type="button">Send</button>
+  </div>
+ </section>
+ <p class="note">Dolla Pulls Customer Support</p>
+</main>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+ getFirestore,doc,getDoc,setDoc,collection,addDoc,onSnapshot,
+ query,where,orderBy,serverTimestamp,updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyBCylzF69zBzqNQ88mLj7aEXUyLqu3rNT0",
+ authDomain:"dolla-pulls.firebaseapp.com",
+ projectId:"dolla-pulls",
+ storageBucket:"dolla-pulls.firebasestorage.app",
+ messagingSenderId:"952761946013",
+ appId:"1:952761946013:web:72fe061231ee8951c0e974"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+
+const messagesEl=$("messages");
+const amountPanel=$("amountPanel");
+const amountInput=$("amountInput");
+const amountSend=$("amountSend");
+const choicesEl=$("choices");
+const trxPanel=$("trxPanel");
+const trxInput=$("trxInput");
+const trxSend=$("trxSend");
+const loadingEl=$("loading");
+const statusEl=$("status");
+const errorEl=$("error");
+
+/*
+ * এই সময়ের আগের কোনো SMS এই পেজে দেখানো হবে না।
+ * পেজ রিফ্রেশ হলে sessionStartMs নতুন হবে, তাই আগের SMS আর লোড হবে না।
+ */
+const sessionStartMs=Date.now();
+
+let currentUser=null;
+let messagesRef=null;
+let chatRef=null;
+let busy=false;
+let firstSnapshot=true;
+let amountValue=null;
+let selectedMethod=null;
+let finished=false;
+const shownIds=new Set();
+
+function showError(message){
+ errorEl.textContent=message;
+ errorEl.style.display="block";
+}
+function hideError(){
+ errorEl.textContent="";
+ errorEl.style.display="none";
+}
+
+/* নতুন মেসেজ এলে পুরো পেজ ধীরে নিচে যাবে।
+   ফলে Credit Options স্বাভাবিকভাবে ধীরে ধীরে স্ক্রিনের উপরে উঠে যাবে। */
+function scrollPageToBottom(){
+ requestAnimationFrame(()=>{
+  window.scrollTo({
+   top:document.documentElement.scrollHeight,
+   behavior:"smooth"
+  });
+ });
+}
+
+function addBubble(text,sender,time=new Date()){
+ const bubble=document.createElement("div");
+ bubble.className="msg "+(sender==="customer"?"user":"bot");
+
+ const content=document.createElement("div");
+ content.textContent=text;
+ bubble.appendChild(content);
+
+ const stamp=document.createElement("small");
+ stamp.textContent=time.toLocaleTimeString("en-US",{
+  hour:"2-digit",minute:"2-digit",hour12:true
+ });
+ bubble.appendChild(stamp);
+
+ messagesEl.appendChild(bubble);
+ scrollPageToBottom();
+}
+
+function addInstructionBubble(text,number,time=new Date()){
+ const bubble=document.createElement("div");
+ bubble.className="msg bot";
+
+ const content=document.createElement("div");
+ content.textContent=text;
+ bubble.appendChild(content);
+
+ const line=document.createElement("div");
+ line.className="copyline";
+
+ const numberText=document.createElement("strong");
+ numberText.textContent=number;
+ line.appendChild(numberText);
+
+ const copyButton=document.createElement("button");
+ copyButton.className="copy";
+ copyButton.type="button";
+ copyButton.textContent="Copy";
+ copyButton.addEventListener("click",async()=>{
+  try{
+   await navigator.clipboard.writeText(number);
+   copyButton.textContent="Copied";
+  }catch{
+   const temp=document.createElement("textarea");
+   temp.value=number;
+   document.body.appendChild(temp);
+   temp.select();
+   const copied=document.execCommand("copy");
+   temp.remove();
+   copyButton.textContent=copied?"Copied":"Try again";
+  }
+ });
+
+ line.appendChild(copyButton);
+ bubble.appendChild(line);
+
+ const stamp=document.createElement("small");
+ stamp.textContent=time.toLocaleTimeString("en-US",{
+  hour:"2-digit",minute:"2-digit",hour12:true
+ });
+ bubble.appendChild(stamp);
+
+ messagesEl.appendChild(bubble);
+ scrollPageToBottom();
+}
+
+function renderMessage(data){
+ const text=String(data.text||"");
+ const time=data.createdAt?.toDate?.()||new Date(data.createdAtMs||Date.now());
+
+ if(data.sender==="bot"&&text.startsWith("[PAYMENT_INSTRUCTION]")){
+  const instruction=text.replace("[PAYMENT_INSTRUCTION]","").trim();
+  const match=instruction.match(/(?:Account Number:|Card Number:|Visa Card Number:)\s*(\S+)/i);
+  const accountNumber=match?match[1]:"XXXXXXXXXXXXX";
+  const visibleText=instruction.replace(
+   /(?:Cardless Deposit Account Number:|Visa Card Number:|Card Number:)\s*\S+/i,
+   ""
+  ).trim();
+  addInstructionBubble(visibleText||"Payment instruction",accountNumber,time);
+  return;
+ }
+ addBubble(text,data.sender||"bot",time);
+}
+
+async function saveMessage(text,sender){
+ const now=Date.now();
+ await addDoc(messagesRef,{
+  text,
+  sender,
+  senderUid:sender==="customer"?currentUser.uid:"bot",
+  createdAt:serverTimestamp(),
+  createdAtMs:now,
+  unreadByAdmin:sender==="customer"
+ });
+ await updateDoc(chatRef,{
+  lastMessage:text,
+  updatedAt:serverTimestamp(),
+  updatedAtMs:now,
+  ...(sender==="customer"?{unreadByAdmin:true}:{})
+ });
+}
+
+function instructions(method){
+ if(method==="CRM from atm booth"){
+  return {
+   text:"Your "+amountValue+" credit amount. Go to the nearest ATM booth and use the cardless deposit option to deposit the specified amount into the designated account. After making the deposit, send the transaction ID.",
+   number:"XXXXXXXXXXXXX",
+   saved:"[PAYMENT_INSTRUCTION] The CRM from ATM booth option has been selected for the $"+amountValue+" credit. Cardless Deposit Account Number: XXXXXXXXXXXXX"
+  };
+ }
+ return {
+  text:"Credit amount: "+amountValue+" dollars. Select the transfer amount in "+method+", choose VISA DEBIT CARD, and send the Transaction ID after payment.",
+  number:"XXXXXXXXXXXXX",
+  saved:"[PAYMENT_INSTRUCTION] Amount $"+amountValue+" credit from "+method+". Transfer Money → Visa Card. Visa Card Number: XXXXXXXXXXXXX"
+ };
+}
+
+function restoreFormState(data){
+ amountValue=Number(data.flowAmount)||null;
+ selectedMethod=data.flowMethod||null;
+ finished=data.flowFinished===true;
+
+ amountPanel.hidden=true;
+ choicesEl.hidden=true;
+ trxPanel.hidden=true;
+
+ if(finished)return;
+ if(!amountValue){
+  amountPanel.hidden=false;
+ }else if(!selectedMethod){
+  choicesEl.hidden=false;
+ }else{
+  trxPanel.hidden=false;
+ }
+}
+
+async function submitAmount(){
+ if(busy||!currentUser)return;
+
+ const amount=Number(amountInput.value);
+ if(!Number.isFinite(amount)||amount<100||amount>1000000){
+  showError("Minimum transaction amount is 100 dollars and maximum is 1,000,000 dollars.");
+  amountInput.focus();
+  return;
+ }
+
+ busy=true;
+ amountSend.disabled=true;
+ hideError();
+
+ try{
+  amountValue=amount;
+  selectedMethod=null;
+  finished=false;
+
+  await saveMessage("Credit "+amountValue+" Dollars","customer");
+  await updateDoc(chatRef,{
+   flowAmount:amountValue,
+   flowMethod:null,
+   flowFinished:false
+  });
+
+  amountPanel.hidden=true;
+  await saveMessage("Credit $"+amountValue+". Select the payment method.","bot");
+  choicesEl.hidden=false;
+  scrollPageToBottom();
+ }catch(error){
+  console.error(error);
+  showError("The amount could not be sent. Check Firebase/Firestore Rules and try again.");
+  amountSend.disabled=false;
+ }finally{
+  busy=false;
+ }
+}
+
+async function selectMethod(method){
+ if(busy||!currentUser||finished||!amountValue)return;
+
+ busy=true;
+ document.querySelectorAll(".choice").forEach(button=>button.disabled=true);
+ hideError();
+
+ try{
+  selectedMethod=method;
+  await saveMessage("I have selected a payment method: "+method,"customer");
+  await updateDoc(chatRef,{flowMethod:method});
+
+  const details=instructions(method);
+  await saveMessage(details.saved,"bot");
+
+  choicesEl.hidden=true;
+  trxPanel.hidden=false;
+  trxInput.focus();
+  scrollPageToBottom();
+ }catch(error){
+  console.error(error);
+  showError("Payment method could not be sent. Check Firebase/Firestore Rules.");
+  document.querySelectorAll(".choice").forEach(button=>button.disabled=false);
+ }finally{
+  busy=false;
+ }
+}
+
+async function submitTrx(){
+ if(busy||!currentUser||finished)return;
+
+ const transactionId=trxInput.value.trim();
+ if(!transactionId){
+  showError("Please enter the Transaction ID.");
+  trxInput.focus();
+  return;
+ }
+ if(!amountValue||!selectedMethod){
+  showError("Please select the credit amount and payment method first.");
+  return;
+ }
+
+ busy=true;
+ trxSend.disabled=true;
+ hideError();
+
+ try{
+  await saveMessage(
+   "Transaction ID submitted: "+transactionId+
+   " | Credit Amount: $"+amountValue+
+   " | Payment Method: "+selectedMethod,
+   "customer"
+  );
+
+  await updateDoc(chatRef,{flowFinished:true});
+  trxPanel.hidden=true;
+  finished=true;
+
+  await saveMessage(
+   "Transaction ID received. Dolla Pulls will verify your payment. Once verification is complete, credit will be added to your account.",
+   "bot"
+  );
+ }catch(error){
+  console.error(error);
+  showError("Transaction ID could not be submitted. Please try again.");
+  trxSend.disabled=false;
+ }finally{
+  busy=false;
+ }
+}
+
+amountSend.addEventListener("click",submitAmount);
+amountInput.addEventListener("keydown",event=>{
+ if(event.key==="Enter")submitAmount();
+});
+trxSend.addEventListener("click",submitTrx);
+trxInput.addEventListener("keydown",event=>{
+ if(event.key==="Enter")submitTrx();
+});
+document.querySelectorAll(".choice").forEach(button=>{
+ button.addEventListener("click",()=>selectMethod(button.dataset.method));
+});
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){
+  window.location.href="index.html";
+  return;
+ }
+
+ currentUser=user;
+ statusEl.textContent="Connecting…";
+ hideError();
+
+ try{
+  const profileSnapshot=await getDoc(doc(db,"users",user.uid));
+  const profile=profileSnapshot.exists()?profileSnapshot.data():{};
+
+  chatRef=doc(db,"chats",user.uid);
+  messagesRef=collection(chatRef,"messages");
+
+  const chatSnapshot=await getDoc(chatRef);
+  let chatData={};
+
+  if(!chatSnapshot.exists()){
+   chatData={
+    uid:user.uid,
+    name:profile.name||user.displayName||"Customer",
+    phone:profile.phone||"",
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+    updatedAtMs:Date.now(),
+    unreadByAdmin:false,
+    lastMessage:"",
+    flowAmount:null,
+    flowMethod:null,
+    flowFinished:false
+   };
+   await setDoc(chatRef,chatData);
+  }else{
+   chatData=chatSnapshot.data();
+   await updateDoc(chatRef,{
+    name:profile.name||user.displayName||"Customer",
+    phone:profile.phone||"",
+    updatedAt:serverTimestamp(),
+    updatedAtMs:Date.now()
+   });
+  }
+
+  restoreFormState(chatData);
+
+  /*
+   * গুরুত্বপূর্ণ:
+   * শুধু এই পেজ খোলার পর তৈরি হওয়া মেসেজ দেখাবে।
+   * পেজ রিফ্রেশ করলে sessionStartMs আবার নতুন হবে;
+   * ফলে আগের সেশনের SMS আর দেখানো হবে না।
+   */
+  const recentMessagesQuery=query(
+   messagesRef,
+   where("createdAtMs",">",sessionStartMs),
+   orderBy("createdAtMs","asc")
+  );
+
+  onSnapshot(recentMessagesQuery,snapshot=>{
+   loadingEl.style.display="none";
+   statusEl.textContent="Connected";
+
+   snapshot.docChanges().forEach(change=>{
+    if(change.type!=="added"||shownIds.has(change.doc.id))return;
+    shownIds.add(change.doc.id);
+    renderMessage(change.doc.data());
+   });
+
+   if(firstSnapshot){
+    firstSnapshot=false;
+    if(snapshot.empty){
+     addBubble(
+      "Welcome to Dolla Pulls Credit Support. Please enter the dollar amount you need.",
+      "bot"
+     );
+    }
+    scrollPageToBottom();
+   }
+  },error=>{
+   console.error(error);
+   loadingEl.style.display="none";
+   statusEl.textContent="Offline";
+   showError("Could not load current chat messages. Check Firestore Rules and your Firebase connection.");
+  });
+
+ }catch(error){
+  console.error(error);
+  loadingEl.style.display="none";
+  statusEl.textContent="Error";
+  showError("Account connection failed. Check login status, Firebase configuration and Firestore Rules.");
+ }
+});
+</script>
+</body>
+</html>
