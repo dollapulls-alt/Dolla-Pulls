@@ -38,14 +38,14 @@ button{font:inherit;border:0;cursor:pointer}
 <body>
 <header><div class="head"><div class="logo">DP</div><div><h1>Dolla Pulls</h1><div class="sub">Credit Number Support</div></div><div class="status" id="status">Connecting…</div></div></header>
 <main>
-<section class="intro"><h2>Credit নাম্বার প্রয়োজন</h2><p>আপনার প্রয়োজনীয় ক্রেডিটের পরিমাণ লিখুন। এরপর পেমেন্ট পদ্ধতি নির্বাচন করে লেনদেন আইডি জমা দিন।</p></section>
-<div id="error" class="error"></div><div id="loading">আপনার অ্যাকাউন্ট সংযুক্ত হচ্ছে…</div>
+<section class="intro"><h2>Credit Options</h2><p>Enter the amount of credit you need. Then, select a payment method and submit the transaction ID.</p></section>
+<div id="error" class="error"></div><div id="loading">Your request is being processed……</div>
 <section id="messages" aria-live="polite"></section>
-<section class="panel" id="amountPanel" hidden><label for="amountInput">কত পরিমাণ Credit করতে চান? (৳)</label><div class="entryrow"><input id="amountInput" type="number" min="1" max="1000000" step="1" inputmode="numeric" placeholder="পরিমাণ লিখুন"><button class="send" id="amountSend" type="button">Send</button></div></section>
+<section class="panel" id="amountPanel" hidden><label for="amountInput">How Maany Dollars?</label><div class="entryrow"><input id="amountInput" type="number" min="1" max="1000000" step="1" inputmode="numeric" placeholder="Amount In Dollars"><button class="send" id="amountSend" type="button">Send</button></div></section>
 <div class="actions" id="choices" hidden>
-<button class="choice" data-method="বিকাশ" type="button">বিকাশ</button><button class="choice" data-method="নগদ" type="button">নগদ</button><button class="choice" data-method="উপায়" type="button">উপায়</button><button class="choice" data-method="সরাসরি ব্যাংক" type="button">সরাসরি ব্যাংক</button>
+<button class="choice" data-method="Bkash" type="button">Nagad</button><button class="choice" data-method="Nagad" type="button">Nagad</button><button class="choice" data-method="Upay" type="button">Upay</button><button class="choice" data-method="CRM from atm booth" type="button">CRM from atm booth</button>
 </div>
-<section class="panel" id="trxPanel" hidden><label for="trxInput">আপনার Transaction ID লিখুন</label><div class="entryrow"><input id="trxInput" type="text" maxlength="120" autocomplete="off" placeholder="লেনদেন আইডি লিখুন"><button class="send" id="trxSend" type="button">Send</button></div></section>
+<section class="panel" id="trxPanel" hidden><label for="trxInput">Transaction ID</label><div class="entryrow"><input id="trxInput" type="text" maxlength="120" autocomplete="off" placeholder="Transaction ID"><button class="send" id="trxSend" type="button">Send</button></div></section>
 <p class="note">Dolla Pulls Customer Support</p>
 </main>
 <script type="module">
@@ -82,10 +82,10 @@ function addInstructionBubble(text,number){
  const c=document.createElement("div");c.textContent=text;b.appendChild(c);
  const line=document.createElement("div");line.className="copyline";
  const n=document.createElement("strong");n.textContent=number;line.appendChild(n);
- const btn=document.createElement("button");btn.className="copy";btn.type="button";btn.textContent="নাম্বার কপি";
+ const btn=document.createElement("button");btn.className="copy";btn.type="button";btn.textContent="Copy";
  btn.addEventListener("click",async()=>{
-  try{await navigator.clipboard.writeText(number);btn.textContent="কপি হয়েছে"}
-  catch{const x=document.createElement("textarea");x.value=number;document.body.appendChild(x);x.select();const ok=document.execCommand("copy");x.remove();btn.textContent=ok?"কপি হয়েছে":"কপি করা যায়নি"}
+  try{await navigator.clipboard.writeText(number);btn.textContent="Copied"}
+  catch{const x=document.createElement("textarea");x.value=number;document.body.appendChild(x);x.select();const ok=document.execCommand("copy");x.remove();btn.textContent=ok?"Copied":"Try agin"}
  });
  line.appendChild(btn);b.appendChild(line);
  const t=document.createElement("small");t.textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:true});b.appendChild(t);
@@ -97,13 +97,13 @@ async function saveMessage(text,sender){
  await updateDoc(chatRef,{lastMessage:text,updatedAt:serverTimestamp(),updatedAtMs:now,...(sender==="customer"?{unreadByAdmin:true}:{})});
 }
 function instructions(method){
- if(method==="সরাসরি ব্যাংক")return {
-  text:"আপনি ৳"+amountValue+" Credit করতে চেয়েছেন। সরাসরি ব্যাংকের মাধ্যমে পেমেন্ট করতে নিকটস্থ ব্যাংক বুথে গিয়ে Cardless Deposit নির্বাচন করুন। এরপর নিচের Account Number-এ টাকা জমা দিন। টাকা জমা দেওয়ার পর Transaction ID নিচের ঘরে লিখে Send করুন।",
-  number:"17459614758",
-  saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য সরাসরি ব্যাংক নির্বাচন করা হয়েছে। Cardless Deposit Account Number: 17459614758।"
+ if(method==="CRM from atm booth")return {
+  text:"Your"+amountValue+" Credit Amount. Go to the nearest atm booth and use the cardless and deposit the specified amount into the designated account. After making the cardless deposit,send the transaction ID.",
+  number:"XXXXXXXXXXXXX",
+  saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য সরাসরি ব্যাংক নির্বাচন করা হয়েছে। Cardless Deposit Account Number:XXXXXXXXXXXXX"
  };
  return {
-  text:"আপনি ৳"+amountValue+" Credit করতে চেয়েছেন। "+method+" দিয়ে পেমেন্ট করতে Transfer Money নির্বাচন করুন। এরপর Visa Card নির্বাচন করে নিচের Visa Card Number ব্যবহার করুন। পেমেন্ট সম্পন্ন হলে Transaction ID নিচের ঘরে লিখে Send করুন।",
+  text:"Credit"+amountValue+"Dollars Select transfer amount from "+method+" Then select VISA DEBIT CARD and send Transaction ID after payment",
   number:"331256",
   saved:"[PAYMENT_INSTRUCTION] ৳"+amountValue+" Credit-এর জন্য "+method+" নির্বাচন করা হয়েছে। Transfer Money → Visa Card, Visa Card Number: 331256।"
  };
